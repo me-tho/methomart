@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>এডমিন প্যানেল — MethoMart</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1F3D2B; --forest-dark:#152A1D; --gold:#D4A017; --gold-light:#E8C158;
+    --ivory:#FBF6EC; --card:#F3ECDA; --maroon:#7A3B2E; --charcoal:#2B2B25;
+    --muted:#6B6B5D; --line:#DFD5B8; --radius:14px; --danger:#B23A3A; --ok:#2F7A4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Noto Serif Bengali', serif; background:var(--ivory); color:var(--charcoal); line-height:1.6;}
+  h1,h2,h3,.brand{font-family:'Baloo Da 2', sans-serif;}
+  button, input, select, textarea{font-family:inherit; font-size:1rem;}
+  img{max-width:100%; display:block;}
+
+  header{background:var(--forest); color:var(--ivory); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,.15); position:sticky; top:0; z-index:50;}
+  header .brand{font-size:1.3rem; font-weight:800; color:var(--gold);}
+  header .brand span{color:var(--ivory);}
+  #logoutBtn{background:none; border:1.5px solid var(--gold); color:var(--gold-light); padding:7px 16px; border-radius:999px; cursor:pointer; font-weight:600;}
+  #logoutBtn:hover{background:var(--gold); color:var(--forest-dark);}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:20px;}
+
+  /* ----- LOGIN ----- */
+  #loginScreen{min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .login-box{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:34px 30px; max-width:380px; width:100%; box-shadow:0 8px 30px rgba(0,0,0,.12);}
+  .login-box h1{color:var(--forest); font-size:1.5rem; margin-bottom:6px; text-align:center;}
+  .login-box p.sub{color:var(--muted); text-align:center; margin-bottom:22px; font-size:.9rem;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-weight:600; margin-bottom:6px; font-size:.9rem; color:var(--forest-dark);}
+  .field input, .field select, .field textarea{width:100%; padding:11px 13px; border:1.5px solid var(--line); border-radius:10px; background:#fff; color:var(--charcoal);}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--gold);}
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--gold); color:var(--forest-dark); border:none; padding:11px 20px; border-radius:999px; font-weight:700; cursor:pointer; transition:background .2s, transform .15s;}
+  .btn:hover{background:var(--gold-light); transform:translateY(-1px);}
+  .btn:disabled{opacity:.6; cursor:not-allowed; transform:none;}
+  .btn-block{width:100%;}
+  .btn-outline{background:none; border:1.5px solid var(--forest); color:var(--forest);}
+  .btn-outline:hover{background:var(--forest); color:var(--ivory);}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .btn-danger:hover{background:#8f2c2c;}
+  .btn-sm{padding:6px 13px; font-size:.85rem;}
+  #loginError{color:var(--danger); font-size:.88rem; margin-top:10px; text-align:center; display:none;}
+
+  /* ----- TABS ----- */
+  .tabs{display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;}
+  .tab-btn{background:var(--card); border:1.5px solid var(--line); color:var(--forest-dark); padding:9px 18px; border-radius:999px; font-weight:700; cursor:pointer;}
+  .tab-btn.active{background:var(--forest); border-color:var(--forest); color:var(--ivory);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .panel-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+  .panel-head h2{color:var(--forest); font-size:1.3rem;}
+  .search-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .search-row input{padding:9px 13px; border:1.5px solid var(--line); border-radius:10px; min-width:220px;}
+
+  table{width:100%; border-collapse:collapse; background:#fff; border-radius:var(--radius); overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.06);}
+  thead{background:var(--forest); color:var(--ivory);}
+  th, td{padding:10px 12px; text-align:left; font-size:.9rem; border-bottom:1px solid var(--line); vertical-align:top;}
+  tbody tr:hover{background:#faf5e6;}
+  .table-scroll{overflow-x:auto; border-radius:var(--radius);}
+  .muted{color:var(--muted); font-size:.82rem;}
+  .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:.78rem; font-weight:700;}
+  .badge-in{background:#E4F3E8; color:var(--ok);}
+  .badge-out{background:#F6E2E2; color:var(--danger);}
+  .thumb{width:44px; height:44px; border-radius:8px; object-fit:cover; background:var(--card); border:1px solid var(--line);}
+
+  .status-select{padding:6px 8px; border-radius:8px; border:1.5px solid var(--line); background:#fff;}
+
+  /* ----- MODAL ----- */
+  .modal-overlay{position:fixed; inset:0; background:rgba(21,42,29,.55); display:none; align-items:center; justify-content:center; z-index:100; padding:16px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--ivory); border-radius:var(--radius); padding:26px; max-width:520px; width:100%; max-height:88vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.25);}
+  .modal h3{color:var(--forest); margin-bottom:16px; font-size:1.15rem;}
+  .modal-close{float:right; background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); line-height:1;}
+  .form-actions{display:flex; gap:10px; margin-top:18px;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .snippet-box{background:#20281f; color:#e8f0e4; padding:12px; border-radius:10px; font-family:monospace; font-size:.78rem; white-space:pre-wrap; word-break:break-all; margin-top:10px; max-height:200px; overflow-y:auto;}
+
+  .empty-state{text-align:center; padding:40px 20px; color:var(--muted);}
+  .toast{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--forest-dark); color:var(--ivory); padding:11px 22px; border-radius:999px; font-size:.9rem; z-index:200; opacity:0; transition:opacity .3s; pointer-events:none;}
+  .toast.show{opacity:1;}
+
+  @media(max-width:640px){
+    .row2{grid-template-columns:1fr;}
+    th, td{font-size:.8rem; padding:8px;}
+    .search-row input{min-width:0; flex:1;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>🍯 MethoMart <span style="color:var(--maroon)">এডমিন</span></h1>
+    <p class="sub">অ্যাডমিন প্যানেলে প্রবেশ করতে লগইন করুন</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="adminUser">ইউজারনেম</label>
+        <input type="text" id="adminUser" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="adminPass">পাসওয়ার্ড</label>
+        <input type="password" id="adminPass" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-block" id="loginBtn">লগইন করুন</button>
+      <p id="loginError"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard" style="display:none;">
+  <header>
+    <div class="brand">🍯 MethoMart <span>এডমিন প্যানেল</span></div>
+    <button id="logoutBtn">লগ আউট</button>
+  </header>
+
+  <div class="wrap">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="products">প্রোডাক্টস</button>
+      <button class="tab-btn" data-tab="orders">অর্ডার</button>
+      <button class="tab-btn" data-tab="customers">কাস্টমার</button>
+      <button class="tab-btn" data-tab="admins">এডমিনস</button>
+    </div>
+
+    <!-- ---------------- PRODUCTS ---------------- -->
+    <section class="panel active" id="panel-products">
+      <div class="panel-head">
+        <h2>প্রোডাক্টস</h2>
+        <button class="btn" id="addProductBtn">+ নতুন প্রোডাক্ট</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>ছবি</th><th>নাম</th><th>ক্যাটাগরি</th><th>সাইজ</th><th>দাম</th><th>ডিসকাউন্ট দাম</th><th>স্টক</th><th>অ্যাকশন</th></tr></thead>
+          <tbody id="productsBody"><tr><td colspan="8" class="empty-state">লোড হচ্ছে...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------------- ORDERS ---------------- -->
+    <section class="panel" id="panel-orders">
+      <div class="panel-head">
+        <h2>অর্ডার লিস্ট</h2>
+        <div class="search-row">
+          <input type="text" id="orderSearch" placeholder="অর্ডার আইডি / ফোন / নাম দিয়ে খুঁজুন">
+          <button class="btn btn-outline btn-sm" id="orderSearchBtn">খুঁজুন</button>
+          <button class="btn btn-outline btn-sm" id="orderResetBtn">রিসেট</button>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>অর্ডার আইডি</th><th>কাস্টমার</th><th>ফোন</th><th>তারিখ</th><th>টোটাল</th><th>পেমেন্ট</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr></thead>
+          <tbody id="ordersBody"><tr><td colspan="8" class="empty-state">লোড হচ্ছে...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------------- CUSTOMERS ---------------- -->
+    <section class="panel" id="panel-customers">
+      <div class="panel-head"><h2>কাস্টমার লিস্ট</h2></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>নাম</th><th>ফোন</th><th>ইমেইল</th><th>জেলা</th><th>মোট অর্ডার</th><th>মোট কেনাকাটা</th><th>অ্যাকশন</th></tr></thead>
+          <tbody id="customersBody"><tr><td colspan="7" class="empty-state">লোড হচ্ছে...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------------- ADMINS ---------------- -->
+    <section class="panel" id="panel-admins">
+      <div class="panel-head">
+        <h2>এডমিনস</h2>
+        <button class="btn" id="addAdminBtn">+ নতুন এডমিন</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>নাম</th><th>ইউজারনেম</th><th>যোগ হয়েছে</th><th>অ্যাকশন</th></tr></thead>
+          <tbody id="adminsBody"><tr><td colspan="4" class="empty-state">লোড হচ্ছে...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div class="modal-overlay" id="productModalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="productModalClose">&times;</button>
+    <h3 id="productModalTitle">নতুন প্রোডাক্ট</h3>
+    <form id="productForm">
+      <input type="hidden" id="pf_id">
+      <div class="field"><label>প্রোডাক্ট আইডি (নতুনের জন্য খালি রাখুন — অটো তৈরি হবে)</label><input type="text" id="pf_id_display" placeholder="যেমন P40"></div>
+      <div class="row2">
+        <div class="field"><label>নাম *</label><input type="text" id="pf_name" required></div>
+        <div class="field"><label>ক্যাটাগরি</label><input type="text" id="pf_category"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>সাইজ/ভ্যারিয়ান্ট</label><input type="text" id="pf_size" placeholder="যেমন ৫০০ গ্রাম"></div>
+        <div class="field"><label>দাম (৳) *</label><input type="number" id="pf_price" required min="0"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>ডিসকাউন্ট দাম (৳, ঐচ্ছিক)</label><input type="number" id="pf_discount" min="0"></div>
+        <div class="field"><label>স্টক অবস্থা</label>
+          <select id="pf_stock"><option value="in">স্টকে আছে</option><option value="out">স্টক আউট</option></select>
+        </div>
+      </div>
+      <div class="field"><label>ছবির URL</label><input type="text" id="pf_image" placeholder="images/example.jpg"></div>
+      <div class="form-actions">
+        <button type="submit" class="btn" id="productSaveBtn">সেভ করুন</button>
+        <button type="button" class="btn btn-outline" id="productCancelBtn">বাতিল</button>
+      </div>
+      <div id="snippetWrap" style="display:none;">
+        <p class="muted" style="margin-top:14px;">নতুন প্রোডাক্টটা ওয়েবসাইটে দেখাতে নিচের কোডটুকু index.html-এর প্রোডাক্ট গ্রিডে পেস্ট করুন:</p>
+        <div class="snippet-box" id="snippetBox"></div>
+        <button type="button" class="btn btn-outline btn-sm" id="copySnippetBtn" style="margin-top:8px;">কপি করুন</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderModalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="orderModalClose">&times;</button>
+    <h3>অর্ডার বিস্তারিত</h3>
+    <div id="orderDetailsBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="customerModalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="customerModalClose">&times;</button>
+    <h3 id="customerModalTitle">অর্ডার হিস্টোরি</h3>
+    <div id="customerOrdersBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="adminModalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="adminModalClose">&times;</button>
+    <h3>নতুন এডমিন যোগ করুন</h3>
+    <form id="adminForm">
+      <div class="field"><label>নাম</label><input type="text" id="af_name" required></div>
+      <div class="field"><label>ইউজারনেম</label><input type="text" id="af_username" required></div>
+      <div class="field"><label>পাসওয়ার্ড (অন্তত ৮ ক্যারেক্টার)</label><input type="password" id="af_password" required minlength="8"></div>
+      <div class="form-actions">
+        <button type="submit" class="btn">যোগ করুন</button>
+        <button type="button" class="btn btn-outline" id="adminCancelBtn">বাতিল</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ⚠️ index.html-এ থাকা একই API_URL এখানে বসান — দুটো একই Apps Script deploy URL হতে হবে
+  const API_URL = 'https://script.google.com/macros/s/AKfycbx5IeM7bh7obtu61EzNuoFRnZ-8LKmvIovx0cZFWI6-miKu3W8YVljZIW5fuZa_Ku6d8Q/exec';
+
+  async function api(action, data) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, ...data })
+    });
+    return res.json();
+  }
+
+  function getAdminToken() { return localStorage.getItem('mm_admin_token'); }
+  function setAdminToken(t) { localStorage.setItem('mm_admin_token', t); }
+  function clearAdminToken() { localStorage.removeItem('mm_admin_token'); }
+
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function bnNum(n) {
+    return String(n).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+  }
+  function fmtDate(d) {
+    if (!d) return '-';
+    const dt = new Date(d);
+    if (isNaN(dt)) return String(d);
+    return dt.toLocaleDateString('bn-BD', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  /* ================= LOGIN ================= */
+  const loginScreen = document.getElementById('loginScreen');
+  const dashboard = document.getElementById('dashboard');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+
+  async function showDashboard() {
+    loginScreen.style.display = 'none';
+    dashboard.style.display = 'block';
+    await Promise.all([loadProducts(), loadOrders(), loadCustomers(), loadAdmins()]);
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.style.display = 'none';
+    loginBtn.disabled = true; loginBtn.textContent = 'লগইন হচ্ছে...';
+    const username = document.getElementById('adminUser').value.trim();
+    const password = document.getElementById('adminPass').value;
+    try {
+      const r = await api('adminLogin', { username, password });
+      if (r.ok) {
+        setAdminToken(r.token);
+        await showDashboard();
+      } else {
+        loginError.textContent = r.error || 'লগইন ব্যর্থ হয়েছে';
+        loginError.style.display = 'block';
+      }
+    } catch (err) {
+      loginError.textContent = 'নেটওয়ার্ক সমস্যা, আবার চেষ্টা করুন';
+      loginError.style.display = 'block';
+    }
+    loginBtn.disabled = false; loginBtn.textContent = 'লগইন করুন';
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await api('adminLogout', { adminToken: getAdminToken() });
+    clearAdminToken();
+    location.reload();
+  });
+
+  /* ================= TABS ================= */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  /* ================= PRODUCTS ================= */
+  const productModalOverlay = document.getElementById('productModalOverlay');
+  const productForm = document.getElementById('productForm');
+  let editingProductId = null;
+
+  async function loadProducts() {
+    const body = document.getElementById('productsBody');
+    const r = await api('adminGetProducts', { adminToken: getAdminToken() });
+    if (!r.ok) { body.innerHTML = `<tr><td colspan="8" class="empty-state">${r.error || 'লোড করা যায়নি'}</td></tr>`; return; }
+    if (!r.products.length) { body.innerHTML = `<tr><td colspan="8" class="empty-state">কোনো প্রোডাক্ট নেই। "নতুন প্রোডাক্ট" চেপে যোগ করুন।</td></tr>`; return; }
+    body.innerHTML = r.products.map(p => `
+      <tr>
+        <td>${p.image_url ? `<img class="thumb" src="${p.image_url}" alt="">` : '—'}</td>
+        <td><strong>${p.name}</strong><br><span class="muted">${p.id}</span></td>
+        <td>${p.category || '—'}</td>
+        <td>${p.size || '—'}</td>
+        <td>৳${bnNum(p.price)}</td>
+        <td>${p.discount_price ? '৳' + bnNum(p.discount_price) : '—'}</td>
+        <td><span class="badge ${p.stock === 'out' ? 'badge-out' : 'badge-in'}">${p.stock === 'out' ? 'স্টক আউট' : 'স্টকে আছে'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="openEditProduct('${p.id}')">এডিট</button>
+          <button class="btn btn-sm ${p.stock === 'out' ? '' : 'btn-danger'}" onclick="toggleStock('${p.id}','${p.name.replace(/'/g,"\\'")}', '${p.stock}')">${p.stock === 'out' ? 'স্টকে আনুন' : 'স্টক আউট করুন'}</button>
+        </td>
+      </tr>
+    `).join('');
+    window.__products = r.products;
+  }
+
+  document.getElementById('addProductBtn').addEventListener('click', () => openProductModal());
+  document.getElementById('productModalClose').addEventListener('click', closeProductModal);
+  document.getElementById('productCancelBtn').addEventListener('click', closeProductModal);
+
+  function openProductModal() {
+    editingProductId = null;
+    document.getElementById('productModalTitle').textContent = 'নতুন প্রোডাক্ট';
+    productForm.reset();
+    document.getElementById('pf_id_display').disabled = false;
+    document.getElementById('snippetWrap').style.display = 'none';
+    productModalOverlay.classList.add('open');
+  }
+  function closeProductModal() { productModalOverlay.classList.remove('open'); }
+
+  window.openEditProduct = function (id) {
+    const p = (window.__products || []).find(x => x.id === id);
+    if (!p) return;
+    editingProductId = id;
+    document.getElementById('productModalTitle').textContent = 'প্রোডাক্ট এডিট — ' + p.name;
+    document.getElementById('pf_id_display').value = p.id;
+    document.getElementById('pf_id_display').disabled = true;
+    document.getElementById('pf_name').value = p.name;
+    document.getElementById('pf_category').value = p.category;
+    document.getElementById('pf_size').value = p.size;
+    document.getElementById('pf_price').value = p.price;
+    document.getElementById('pf_discount').value = p.discount_price;
+    document.getElementById('pf_stock').value = p.stock === 'out' ? 'out' : 'in';
+    document.getElementById('pf_image').value = p.image_url;
+    document.getElementById('snippetWrap').style.display = 'none';
+    productModalOverlay.classList.add('open');
+  };
+
+  window.toggleStock = async function (id, name, currentStock) {
+    const goingIn = currentStock === 'out';
+    const r = await api('adminSetStock', { adminToken: getAdminToken(), id, name, in_stock: goingIn });
+    if (r.ok) { toast(goingIn ? 'স্টকে যোগ হয়েছে' : 'স্টক আউট করা হয়েছে'); loadProducts(); }
+    else toast(r.error || 'সমস্যা হয়েছে');
+  };
+
+  productForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const saveBtn = document.getElementById('productSaveBtn');
+    saveBtn.disabled = true;
+    const payload = {
+      adminToken: getAdminToken(),
+      name: document.getElementById('pf_name').value.trim(),
+      category: document.getElementById('pf_category').value.trim(),
+      size: document.getElementById('pf_size').value.trim(),
+      price: Number(document.getElementById('pf_price').value || 0),
+      discount_price: document.getElementById('pf_discount').value ? Number(document.getElementById('pf_discount').value) : '',
+      image_url: document.getElementById('pf_image').value.trim()
+    };
+    let r;
+    if (editingProductId) {
+      payload.id = editingProductId;
+      r = await api('adminUpdateProduct', payload);
+      if (r.ok) {
+        const stockVal = document.getElementById('pf_stock').value;
+        await api('adminSetStock', { adminToken: getAdminToken(), id: editingProductId, name: payload.name, in_stock: stockVal === 'in' });
+      }
+    } else {
+      const idInput = document.getElementById('pf_id_display').value.trim();
+      if (idInput) payload.id = idInput;
+      r = await api('adminAddProduct', payload);
+    }
+    saveBtn.disabled = false;
+    if (!r.ok) { toast(r.error || 'সেভ করা যায়নি'); return; }
+    toast('সেভ হয়েছে');
+    if (!editingProductId && r.html_snippet) {
+      document.getElementById('snippetBox').textContent = r.html_snippet;
+      document.getElementById('snippetWrap').style.display = 'block';
+    } else {
+      closeProductModal();
+    }
+    loadProducts();
+  });
+
+  document.getElementById('copySnippetBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('snippetBox').textContent);
+    toast('কপি হয়েছে');
+  });
+
+  /* ================= ORDERS ================= */
+  const STATUS_OPTIONS = ['Pending Order', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+  function renderOrdersTable(orders) {
+    const body = document.getElementById('ordersBody');
+    if (!orders.length) { body.innerHTML = `<tr><td colspan="8" class="empty-state">কোনো অর্ডার পাওয়া যায়নি</td></tr>`; return; }
+    body.innerHTML = orders.map(o => `
+      <tr>
+        <td><strong>${o.order_id}</strong></td>
+        <td>${o.customer_name}</td>
+        <td>${o.phone}</td>
+        <td>${fmtDate(o.date)}</td>
+        <td>৳${bnNum(o.total)}</td>
+        <td>${o.payment_method}</td>
+        <td>
+          <select class="status-select" data-order="${o.order_id}" onchange="updateStatus('${o.order_id}', this.value)">
+            ${STATUS_OPTIONS.map(s => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+          </select>
+        </td>
+        <td><button class="btn btn-outline btn-sm" onclick="viewOrder('${o.order_id}')">বিস্তারিত</button></td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadOrders() {
+    const r = await api('adminGetOrders', { adminToken: getAdminToken() });
+    if (!r.ok) { document.getElementById('ordersBody').innerHTML = `<tr><td colspan="8" class="empty-state">${r.error}</td></tr>`; return; }
+    window.__orders = r.orders;
+    renderOrdersTable(r.orders);
+  }
+
+  document.getElementById('orderSearchBtn').addEventListener('click', async () => {
+    const q = document.getElementById('orderSearch').value.trim();
+    const r = await api('adminSearchOrders', { adminToken: getAdminToken(), query: q });
+    if (r.ok) renderOrdersTable(r.orders);
+  });
+  document.getElementById('orderResetBtn').addEventListener('click', () => {
+    document.getElementById('orderSearch').value = '';
+    loadOrders();
+  });
+
+  window.updateStatus = async function (orderId, status) {
+    const r = await api('adminUpdateOrderStatus', { adminToken: getAdminToken(), order_id: orderId, status });
+    toast(r.ok ? 'স্ট্যাটাস আপডেট হয়েছে' : (r.error || 'সমস্যা হয়েছে'));
+  };
+
+  window.viewOrder = async function (orderId) {
+    const r = await api('adminGetOrderDetails', { adminToken: getAdminToken(), order_id: orderId });
+    if (!r.ok) { toast(r.error); return; }
+    const o = r.order;
+    const itemsHtml = o.items.map(it => `<li>${it.name} × ${it.qty} — ৳${bnNum(it.price)}</li>`).join('');
+    document.getElementById('orderDetailsBody').innerHTML = `
+      <p><strong>অর্ডার আইডি:</strong> ${o.order_id}</p>
+      <p><strong>কাস্টমার:</strong> ${o.customer_name} (${o.phone})</p>
+      <p><strong>ঠিকানা:</strong> ${o.address}</p>
+      <p><strong>তারিখ:</strong> ${fmtDate(o.date)}</p>
+      <p style="margin-top:10px;"><strong>পণ্যসমূহ:</strong></p>
+      <ul style="margin:6px 0 10px 20px;">${itemsHtml}</ul>
+      <p><strong>সাবটোটাল:</strong> ৳${bnNum(o.subtotal)}</p>
+      <p><strong>ডেলিভারি চার্জ:</strong> ৳${bnNum(o.delivery_charge)} (${o.delivery_option})</p>
+      <p><strong>ছাড়:</strong> ৳${bnNum(o.discount)} ${o.coupon_code ? '(' + o.coupon_code + ')' : ''}</p>
+      <p><strong>সর্বমোট:</strong> ৳${bnNum(o.total)}</p>
+      <p><strong>পেমেন্ট:</strong> ${o.payment_method} ${o.transaction_id ? '— ' + o.transaction_id : ''}</p>
+      <p><strong>স্ট্যাটাস:</strong> ${o.status}</p>
+    `;
+    document.getElementById('orderModalOverlay').classList.add('open');
+  };
+  document.getElementById('orderModalClose').addEventListener('click', () => document.getElementById('orderModalOverlay').classList.remove('open'));
+
+  /* ================= CUSTOMERS ================= */
+  async function loadCustomers() {
+    const body = document.getElementById('customersBody');
+    const r = await api('adminGetCustomers', { adminToken: getAdminToken() });
+    if (!r.ok) { body.innerHTML = `<tr><td colspan="7" class="empty-state">${r.error}</td></tr>`; return; }
+    if (!r.customers.length) { body.innerHTML = `<tr><td colspan="7" class="empty-state">কোনো কাস্টমার নেই</td></tr>`; return; }
+    body.innerHTML = r.customers.map(c => `
+      <tr>
+        <td>${c.name}</td>
+        <td>${c.phone || '—'}</td>
+        <td>${c.email || '—'}</td>
+        <td>${c.district || '—'}</td>
+        <td>${bnNum(c.order_count)}</td>
+        <td>৳${bnNum(c.total_purchase)}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="viewCustomer('${c.id}','${c.name.replace(/'/g,"\\'")}')">অর্ডার হিস্টোরি</button></td>
+      </tr>
+    `).join('');
+  }
+
+  window.viewCustomer = async function (userId, name) {
+    document.getElementById('customerModalTitle').textContent = name + ' — অর্ডার হিস্টোরি';
+    const r = await api('adminGetCustomerOrders', { adminToken: getAdminToken(), user_id: userId });
+    const body = document.getElementById('customerOrdersBody');
+    if (!r.ok) { body.innerHTML = `<p>${r.error}</p>`; }
+    else if (!r.orders.length) { body.innerHTML = `<p class="muted">এখনো কোনো অর্ডার নেই</p>`; }
+    else {
+      body.innerHTML = `<p style="margin-bottom:12px;"><strong>মোট কেনাকাটা:</strong> ৳${bnNum(r.total_purchase)}</p>` +
+        r.orders.map(o => `
+          <div style="border-bottom:1px solid var(--line); padding:10px 0;">
+            <strong>${o.order_id}</strong> — ${fmtDate(o.date)}<br>
+            <span class="muted">${o.status}</span> · ৳${bnNum(o.total)}
+          </div>
+        `).join('');
+    }
+    document.getElementById('customerModalOverlay').classList.add('open');
+  };
+  document.getElementById('customerModalClose').addEventListener('click', () => document.getElementById('customerModalOverlay').classList.remove('open'));
+
+  /* ================= ADMINS ================= */
+  const adminModalOverlay = document.getElementById('adminModalOverlay');
+  const adminForm = document.getElementById('adminForm');
+
+  async function loadAdmins() {
+    const body = document.getElementById('adminsBody');
+    const r = await api('adminListAdmins', { adminToken: getAdminToken() });
+    if (!r.ok) { body.innerHTML = `<tr><td colspan="4" class="empty-state">${r.error}</td></tr>`; return; }
+    body.innerHTML = r.admins.map(a => `
+      <tr>
+        <td>${a.name}</td>
+        <td>${a.username}</td>
+        <td>${fmtDate(a.created_at)}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteAdmin('${a.id}')">মুছুন</button></td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('addAdminBtn').addEventListener('click', () => {
+    adminForm.reset();
+    adminModalOverlay.classList.add('open');
+  });
+  document.getElementById('adminModalClose').addEventListener('click', () => adminModalOverlay.classList.remove('open'));
+  document.getElementById('adminCancelBtn').addEventListener('click', () => adminModalOverlay.classList.remove('open'));
+
+  adminForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await api('adminAddAdmin', {
+      adminToken: getAdminToken(),
+      name: document.getElementById('af_name').value.trim(),
+      username: document.getElementById('af_username').value.trim(),
+      password: document.getElementById('af_password').value
+    });
+    if (!r.ok) { toast(r.error || 'সমস্যা হয়েছে'); return; }
+    toast('এডমিন যোগ হয়েছে');
+    adminModalOverlay.classList.remove('open');
+    loadAdmins();
+  });
+
+  window.deleteAdmin = async function (id) {
+    if (!confirm('এই এডমিন অ্যাকাউন্টটা মুছে ফেলতে চান?')) return;
+    const r = await api('adminDeleteAdmin', { adminToken: getAdminToken(), id });
+    if (r.ok) { toast('মুছে ফেলা হয়েছে'); loadAdmins(); }
+    else toast(r.error || 'সমস্যা হয়েছে');
+  };
+
+  /* ================= INIT ================= */
+  (async function init() {
+    const token = getAdminToken();
+    if (!token) return;
+    // টোকেন আছে কিনা যাচাই করার জন্য একটা হালকা রিকোয়েস্ট পাঠানো হচ্ছে
+    const r = await api('adminGetProducts', { adminToken: token });
+    if (r.ok) { await showDashboard(); }
+    else { clearAdminToken(); }
+  })();
+</script>
+</body>
+</html>
