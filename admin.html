@@ -282,6 +282,21 @@
         <button class="btn btn-outline btn-sm" id="applyOrderFilterBtn">ফিল্টার করুন</button>
         <button class="btn btn-outline btn-sm" id="clearOrderFilterBtn">ফিল্টার মুছুন</button>
       </div>
+      <div style="
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:12px 0;
+">
+
+  <button
+    id="syncOldOrdersBtn"
+    class="btn btn-outline"
+    type="button">
+    🔄 পুরনো অর্ডার → Sales Sync
+  </button>
+
+</div>
       <div class="bulk-bar" id="orderBulkBar">
         <span id="orderBulkCount">০টা সিলেক্ট করা</span>
         <select class="status-select" id="bulkStatusSelect">
@@ -940,7 +955,79 @@
     loadOrders();
   });
 
-  async function loadOrders() {
+  async function loadOrders() document.getElementById('syncOldOrdersBtn').addEventListener(
+  'click',
+  async function () {
+
+    const confirmed = confirm(
+      'বর্তমান Orders শিটের পুরনো অর্ডারগুলো Accounting-এর Sales তালিকায় Sync করা হবে।\n\n' +
+      'যেসব অর্ডার ইতিমধ্যে Sales-এ আছে সেগুলো আবার যোগ হবে না।\n' +
+      'Cancelled অর্ডার বাদ যাবে।\n\n' +
+      'আপনি কি Sync করতে চান?'
+    );
+
+    if (!confirmed) return;
+
+    const btn = document.getElementById('syncOldOrdersBtn');
+
+    btn.disabled = true;
+    const oldText = btn.innerHTML;
+    btn.innerHTML = '⏳ Sync হচ্ছে...';
+
+    try {
+
+      const r = await api(
+        'syncExistingOrdersToSales',
+        {}
+      );
+
+      if (!r.ok) {
+
+        toast(
+          r.error ||
+          'পুরনো অর্ডার Sync করতে সমস্যা হয়েছে'
+        );
+
+        return;
+      }
+
+      const result = r;
+
+      const message =
+        '✅ Sync সম্পন্ন\n' +
+        'যোগ হয়েছে: ' + bnNum(result.added) +
+        '\nআগে থেকেই ছিল: ' + bnNum(result.skipped) +
+        '\nবাতিল: ' + bnNum(result.cancelled) +
+        '\nব্যর্থ: ' + bnNum(result.failed);
+
+      alert(message);
+
+      toast(
+        'Sync সম্পন্ন — ' +
+        bnNum(result.added) +
+        'টি Sales-এ যোগ হয়েছে'
+      );
+
+      // Orders আবার load
+      if (typeof loadOrders === 'function') {
+        loadOrders();
+      }
+
+    } catch (err) {
+
+      console.error(err);
+
+      toast(
+        'Sync করতে সমস্যা হয়েছে'
+      );
+
+    } finally {
+
+      btn.disabled = false;
+      btn.innerHTML = oldText;
+    }
+  }
+); {
     const r = await api('adminGetOrders', { adminToken: getAdminToken() });
     if (!r.ok) { document.getElementById('ordersBody').innerHTML = `<tr><td colspan="9" class="empty-state">${r.error}</td></tr>`; return; }
     window.__orders = r.orders;
