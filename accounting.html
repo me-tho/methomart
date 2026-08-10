@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>হিসাব সফটওয়্যার — MethoMart</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#1F3D2B; --forest-dark:#152A1D; --gold:#D4A017; --gold-light:#E8C158;
+    --ivory:#FBF6EC; --card:#F3ECDA; --maroon:#7A3B2E; --charcoal:#2B2B25;
+    --muted:#6B6B5D; --line:#DFD5B8; --radius:14px; --danger:#B23A3A; --ok:#2F7A4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Noto Serif Bengali', serif; background:var(--ivory); color:var(--charcoal); line-height:1.6;}
+  h1,h2,h3,.brand{font-family:'Baloo Da 2', sans-serif;}
+  button, input, select, textarea{font-family:inherit; font-size:.95rem;}
+  a{color:inherit;}
+  header{background:var(--forest); color:var(--ivory); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,.15); position:sticky; top:0; z-index:50;}
+  header .brand{font-size:1.2rem; font-weight:800; color:var(--gold); display:flex; align-items:center; gap:10px;}
+  header .brand span{color:var(--ivory); font-size:.85rem; font-weight:600;}
+  header a.back{color:var(--gold-light); text-decoration:none; border:1.5px solid var(--gold); padding:6px 14px; border-radius:999px; font-weight:600; font-size:.85rem;}
+  #sidebarToggle{display:none; background:none; border:1.5px solid var(--gold); color:var(--gold-light); width:36px; height:36px; border-radius:10px; cursor:pointer; font-size:1.1rem;}
+
+  .shell{display:flex; align-items:flex-start;}
+  .sidebar{width:230px; flex-shrink:0; background:var(--card); border-right:1px solid var(--line); min-height:calc(100vh - 61px); padding:14px 10px; position:sticky; top:61px; overflow-y:auto; max-height:calc(100vh - 61px);}
+  .sidebar .grp-title{font-size:.72rem; color:var(--muted); text-transform:uppercase; font-weight:700; margin:12px 8px 4px;}
+  .sidebar .tab-btn{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:none; color:var(--forest-dark); padding:9px 12px; border-radius:9px; font-weight:700; cursor:pointer; margin-bottom:2px; font-size:.88rem;}
+  .sidebar .tab-btn:hover{background:#EFE6CC;}
+  .sidebar .tab-btn.active{background:var(--forest); color:var(--ivory);}
+  .main{flex:1; min-width:0; padding:18px;}
+  .wrap{max-width:1200px; margin:0 auto;}
+
+  @media (max-width:900px){
+    #sidebarToggle{display:block;}
+    .sidebar{position:fixed; left:0; top:61px; bottom:0; z-index:60; transform:translateX(-100%); transition:.2s; box-shadow:6px 0 20px rgba(0,0,0,.2);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:55;}
+    .sidebar-overlay.show{display:block;}
+  }
+
+  .card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin-bottom:16px;}
+  .card h2{color:var(--forest); font-size:1.15rem; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:16px;}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
+  .stat .lbl{font-size:.78rem; color:var(--muted); font-weight:600;}
+  .stat .val{font-size:1.35rem; font-weight:800; color:var(--forest); margin-top:2px;}
+  .stat.warn .val{color:var(--danger);}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--forest); color:var(--ivory); border:none; padding:9px 16px; border-radius:9px; font-weight:700; cursor:pointer;}
+  .btn:hover{background:var(--forest-dark);}
+  .btn.gold{background:var(--gold); color:var(--forest-dark);}
+  .btn.gold:hover{background:var(--gold-light);}
+  .btn.danger{background:var(--danger); color:#fff;}
+  .btn.ghost{background:none; border:1.5px solid var(--line); color:var(--charcoal);}
+  .btn.sm{padding:5px 11px; font-size:.8rem;}
+
+  table{width:100%; border-collapse:collapse; font-size:.88rem;}
+  th,td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap;}
+  th{color:var(--forest); font-weight:700; background:#F8F3E4;}
+  .tbl-wrap{overflow-x:auto;}
+  tr:hover td{background:#FCFAF2;}
+  .tag{display:inline-block; padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:700;}
+  .tag.ok{background:#E4F2E7; color:var(--ok);}
+  .tag.warn{background:#FDECEC; color:var(--danger);}
+  .tag.mid{background:#FFF3D6; color:#8A6410;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-weight:700; margin-bottom:5px; font-size:.85rem; color:var(--forest-dark);}
+  .field input, .field select, .field textarea{width:100%; padding:9px 11px; border:1.5px solid var(--line); border-radius:9px; background:#fff; color:var(--charcoal);}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--gold);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  @media (max-width:640px){.row2,.row3{grid-template-columns:1fr;}}
+
+  .item-row{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center;}
+  @media (max-width:640px){.item-row{grid-template-columns:1fr 1fr; }}
+  .item-row.no-unit{grid-template-columns:2fr 1fr 1fr 1fr auto;}
+  @media (max-width:640px){.item-row.no-unit{grid-template-columns:1fr 1fr; }}
+
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:flex-start; justify-content:center; padding:30px 12px; overflow-y:auto;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff; border-radius:var(--radius); max-width:640px; width:100%; padding:22px; position:relative;}
+  .modal.wide{max-width:900px;}
+  .modal .x{position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--muted);}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--forest); color:var(--ivory); padding:11px 22px; border-radius:999px; font-weight:700; z-index:400; display:none; box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  .empty{text-align:center; padding:30px; color:var(--muted);}
+  .search-bar{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .search-bar input, .search-bar select{padding:9px 11px; border:1.5px solid var(--line); border-radius:9px;}
+  .muted{color:var(--muted); font-size:.85rem;}
+  .totals-box{margin-top:10px; background:#F8F3E4; border-radius:10px; padding:12px 16px; max-width:320px; margin-left:auto;}
+  .totals-box .tr{display:flex; justify-content:space-between; padding:4px 0; font-weight:600;}
+  .totals-box .tr.grand{font-size:1.15rem; color:var(--forest); font-weight:800; border-top:1px solid var(--line); margin-top:4px; padding-top:8px;}
+
+  /* ---- ইনভয়েস প্রিন্ট (মেঠোমার্ট ক্যাশ মেমো — হুবহু রেফারেন্স লেআউট) ---- */
+  #invoicePrint{display:none;}
+  .inv-box{--inv-color:#1F5F3F; width:720px; max-width:100%; margin:0 auto; padding:18px; font-family:'Noto Serif Bengali',serif; color:#000; background:#fff; font-size:.86rem; position:relative; z-index:0; overflow:hidden;}
+  /* watermark এখন পুরো ইনভয়েস পেজের ঠিক মাঝখানে (ওপর-নিচ, ডান-বাম সব মিলিয়ে) বসে,
+     .inv-box-এর সরাসরি সন্তান হিসেবে, যাতে টেবিলের কলাম নয় বরং পুরো কাগজের কেন্দ্রে থাকে।
+     z-index:-1 দিয়ে বাকি সব কনটেন্টের নিচে (পেছনে) রাখা হচ্ছে। */
+  .inv-watermark{position:absolute; top:50%; left:50%; width:300px; max-width:75%; transform:translate(-50%,-50%); opacity:.12; z-index:-1; pointer-events:none; object-fit:contain;}
+  /* watermark সরাসরি আইটেম টেবিলের "বিবরণ" কলামের পেছনে বসানো হচ্ছে (পুরো ইনভয়েসের মাঝখানে নয়) —
+     যাতে টেবিলের উপরে/নিচে যত সেকশনই (দোকানের হেডার, মেটা তথ্য, টোটাল, কুরিয়ার, শর্তাবলি ইত্যাদি)
+     থাকুক না কেন, watermark সবসময় বিবরণ কলামেই দেখা যায়। <img> ট্যাগ ব্যবহার করা হচ্ছে
+     (background-image নয়), কারণ কিছু ব্রাউজারে/ডিভাইসে "Background graphics" প্রিন্ট-সেটিং অফ
+     থাকলে background-image প্রিন্ট হয় না, কিন্তু <img> সবসময় প্রিন্ট হয়। */
+  .inv-tbl-wrap{position:relative;}
+  .inv-tbl-wrap > table{position:relative; z-index:1;}
+
+  /* হেডার: বাঁয়ে লোগো+দোকানের নাম, ডানে CASH MEMO বক্স + যোগাযোগ লিংক */
+  .inv-head2{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;}
+  .inv-head-left{display:flex; align-items:flex-start; gap:8px;}
+  .inv-logo2{width:48px; height:48px; object-fit:contain; flex-shrink:0;}
+  .inv-shop-bn{font-size:1.25rem; font-weight:800; color:var(--inv-color);}
+  .inv-shop-en{font-size:.82rem; font-style:italic; color:#333;}
+  .inv-shop-line{font-size:.78rem; color:#333;}
+  .inv-head-right{text-align:right;}
+  .cash-memo-box{display:inline-block; border:1.5px solid #000; padding:3px 10px; font-weight:800; font-size:.85rem; letter-spacing:.5px; margin-bottom:4px;}
+  .inv-contact-line{font-size:.76rem; color:#1a5fb4; line-height:1.5;}
+
+  /* নাম/ঠিকানা/মোবা (বামে) ও চালান নং/তারিখ (ডানে, শেষ প্রান্তে) */
+  .inv-meta-flex{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:10px;}
+  table.inv-meta-left{border-collapse:collapse;}
+  table.inv-meta-left td{padding:3px 4px; font-size:.9rem; vertical-align:top;}
+  table.inv-meta-left td.lbl{font-weight:700; white-space:nowrap; width:1%;}
+  table.inv-meta-left td.val{border-bottom:1px dotted #999; min-width:140px;}
+  .inv-meta-right{text-align:right; white-space:nowrap; flex-shrink:0;}
+  .inv-meta-right .row{margin-bottom:6px; font-size:.9rem;}
+  .inv-meta-right .lbl{font-weight:700;}
+  .inv-meta-right .val{font-weight:700; background:#FCEFC7; padding:3px 8px; margin-left:6px; display:inline-block;}
+
+  /* আইটেম টেবিল — শুধু যতগুলো পণ্য ততগুলো সারি, বিবরণ কলাম হলুদ, একক কলাম সবুজ */
+  table.inv-tbl{width:100%; border-collapse:collapse; margin-bottom:8px;}
+  table.inv-tbl th, table.inv-tbl td{border:1px solid #000; padding:4px 7px; font-size:.85rem;}
+  table.inv-tbl th{background:#EDEDED; text-align:center; font-weight:700;}
+  table.inv-tbl td.c-no{text-align:center; width:32px;}
+  table.inv-tbl td.c-desc{background:transparent !important;}
+  table.inv-tbl td.c-qty{text-align:center; width:60px;}
+  table.inv-tbl td.c-unit{background:transparent !important; text-align:center; width:70px;}
+  table.inv-tbl td.c-price{text-align:right; width:70px;}
+  table.inv-tbl td.c-amt{text-align:right; width:90px;}
+
+  /* কথায় (বামে) এবং মোট/পরিশোধ/বাকি (ডানে যতদূর সম্ভব প্রসারিত) একই সারিতে */
+  .inv-summary-flex{display:flex; align-items:flex-start; gap:14px; margin:2px 0 8px;}
+  .inv-words{font-size:.85rem; flex:1 1 auto; max-width:42%;}
+  .inv-totals{border-collapse:collapse; margin-left:auto; width:300px; max-width:60%;}
+  .inv-totals td{padding:4px 10px; font-size:.9rem; border:1px solid #cfcfcf;}
+  .inv-totals tr.grand td{font-weight:800; color:var(--inv-color); font-size:1rem;}
+  .inv-totals tr.grand td:first-child{background:#fff;}
+  .inv-totals tr.grand td:last-child{background:#E1EFE3;}
+  .inv-totals tr.paid td:last-child{background:#FCF6D9;}
+  .inv-totals tr.due td:last-child{background:#F6DADA; font-weight:700;}
+  .inv-totals td:first-child{font-weight:700;}
+  .inv-totals td:last-child{text-align:right;}
+
+  /* Courier / CTN / Fare / COD — টেবিল, চারপাশে বক্স বর্ডার, ভেতরে কোনো দাগ নেই, শুধু লেখা পর্যন্ত ছোট */
+  table.inv-courier{width:auto; border-collapse:collapse; margin-top:8px; font-size:.85rem; border:1px solid #000;}
+  table.inv-courier td{padding:3px 12px; border:none !important; font-weight:700; white-space:nowrap;}
+
+  .inv-terms{font-size:.78rem; color:#333; margin-top:10px; white-space:pre-line; border-top:1px dashed #999; padding-top:6px;}
+  .inv-foot2{display:flex; justify-content:space-between; align-items:flex-end; margin-top:34px; font-size:.85rem;}
+  .inv-footnote{text-align:center; font-size:.85rem; color:var(--inv-color); font-weight:700; margin-top:10px;}
+
+  /* বিক্রেতার/ক্রেতার স্বাক্ষরের জায়গায় গোল সিল — সম্পূর্ণ SVG/CSS দিয়ে তৈরি, বাঁকানো লেখা ও দোকানের থিম কালার সহ */
+  .inv-seller-sig{position:relative; display:inline-block; padding-top:60px; text-align:right;}
+  .inv-stamp-svg{position:absolute; top:-10px; right:-4px; width:84px; height:84px; transform:rotate(-9deg); pointer-events:none; opacity:.92;}
+
+  /* মডার্ন টেমপ্লেট: রঙিন হেডার ব্যান্ড */
+  .inv-box.tpl-modern .inv-head2{border-bottom:none; background:var(--inv-color); color:#fff; padding:14px 10px; border-radius:8px 8px 0 0; margin:-18px -18px 12px -18px;}
+  .inv-box.tpl-modern .inv-shop-bn, .inv-box.tpl-modern .inv-shop-en, .inv-box.tpl-modern .inv-shop-line{color:#fff;}
+  .inv-box.tpl-modern .inv-contact-line{color:#fff;}
+  .inv-box.tpl-modern table.inv-tbl th{background:var(--inv-color); color:#fff;}
+  /* মিনিমাল টেমপ্লেট: হালকা বর্ডার, কম কালার */
+  .inv-box.tpl-minimal .inv-head2{border-bottom:1px solid #ccc;}
+  .inv-box.tpl-minimal table.inv-tbl th, .inv-box.tpl-minimal table.inv-tbl td{border:none; border-bottom:1px solid #ddd;}
+  .inv-box.tpl-minimal table.inv-tbl th{background:#fff; border-bottom:2px solid var(--inv-color);}
+  .inv-box.tpl-minimal td.c-desc, .inv-box.tpl-minimal td.c-unit{background:none;}
+  @media print{
+    body{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    body *{visibility:hidden;}
+    #invoicePrint, #invoicePrint *{visibility:visible;}
+    #invoicePrint{display:block; position:absolute; top:0; left:0; width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="sidebarToggle">☰</button>
+  <div class="brand">🧮 <span>হিসাব সফটওয়্যার — MethoMart</span></div>
+  <a class="back" href="admin.html">⟵ এডমিন প্যানেল</a>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===== লগইন স্ক্রিন (আলাদাভাবে খুললে) ===== -->
+<div id="loginScreen" style="display:none; min-height:70vh; align-items:center; justify-content:center; padding:30px;">
+  <div style="max-width:360px; margin:60px auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:30px;">
+    <h1 style="color:var(--forest); text-align:center; margin-bottom:16px;">এডমিন লগইন</h1>
+    <div class="field"><label>ইউজারনেম</label><input id="loginUser"></div>
+    <div class="field"><label>পাসওয়ার্ড</label><input id="loginPass" type="password"></div>
+    <button class="btn gold" style="width:100%;" onclick="doLogin()">লগইন</button>
+    <p class="muted" id="loginErr" style="margin-top:10px; color:var(--danger);"></p>
+  </div>
+</div>
+
+<div class="shell" id="appShell" style="display:none;">
+  <nav class="sidebar" id="sidebarNav">
+    <button class="tab-btn active" data-tab="dashboard">📊 ড্যাশবোর্ড</button>
+    <div class="grp-title">Sales</div>
+    <button class="tab-btn" data-tab="sale-new">🧾 নতুন বিক্রয়</button>
+    <button class="tab-btn" data-tab="sale-list">📋 বিক্রয় তালিকা</button>
+    <button class="tab-btn" data-tab="sale-return">↩️ বিক্রয় ফেরত</button>
+    <div class="grp-title">Purchase</div>
+    <button class="tab-btn" data-tab="purchase-new">🛒 নতুন ক্রয়</button>
+    <button class="tab-btn" data-tab="purchase-list">📋 ক্রয় তালিকা</button>
+    <button class="tab-btn" data-tab="purchase-return">↩️ ক্রয় ফেরত</button>
+    <div class="grp-title">তালিকা</div>
+    <button class="tab-btn" data-tab="customers">👥 গ্রাহক</button>
+    <button class="tab-btn" data-tab="suppliers">🚚 সরবরাহকারী</button>
+    <button class="tab-btn" data-tab="products">📦 পণ্য</button>
+    <button class="tab-btn" data-tab="inventory">🏬 ইনভেন্টরি</button>
+    <button class="tab-btn" data-tab="expenses">💸 খরচ</button>
+    <button class="tab-btn" data-tab="cashbank">🏦 ক্যাশ ও ব্যাংক</button>
+    <div class="grp-title">Accounts</div>
+    <button class="tab-btn" data-tab="coa">📚 চার্ট অব অ্যাকাউন্টস</button>
+    <button class="tab-btn" data-tab="journal">📝 জার্নাল</button>
+    <button class="tab-btn" data-tab="ledger">📖 লেজার</button>
+    <button class="tab-btn" data-tab="trialbalance">⚖️ ট্রায়াল ব্যালেন্স</button>
+    <div class="grp-title">Reports</div>
+    <button class="tab-btn" data-tab="rep-pl">📈 লাভ-ক্ষতি</button>
+    <button class="tab-btn" data-tab="rep-bs">🏛️ ব্যালেন্স শীট</button>
+    <button class="tab-btn" data-tab="rep-sales">🧾 বিক্রয় রিপোর্ট</button>
+    <button class="tab-btn" data-tab="rep-purchase">🛒 ক্রয় রিপোর্ট</button>
+    <button class="tab-btn" data-tab="rep-stock">📦 স্টক রিপোর্ট</button>
+    <div class="grp-title">অন্যান্য</div>
+    <button class="tab-btn" data-tab="settings">⚙️ সেটিংস</button>
+  </nav>
+
+  <div class="main"><div class="wrap" id="viewRoot">
+    <div class="empty">লোড হচ্ছে…</div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- মডাল কনটেইনার (জেনেরিক) -->
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
+
+<!-- ইনভয়েস প্রিন্ট এরিয়া -->
+<div id="invoicePrint"></div>
+
+<script>
+/* ================= বেসিক সেটআপ ================= */
+// ⚠️ admin.html-এ থাকা একই API_URL এখানে বসান
+const API_URL = 'https://script.google.com/macros/s/AKfycbx5IeM7bh7obtu61EzNuoFRnZ-8LKmvIovx0cZFWI6-miKu3W8YVljZIW5fuZa_Ku6d8Q/exec';
+
+function getAdminToken(){ return localStorage.getItem('mm_admin_token'); }
+function setAdminToken(t){ localStorage.setItem('mm_admin_token', t); }
+
+// মেথোমার্টের নিজস্ব লোগো — সেটিংসে আলাদা কোনো লোগো URL না দেওয়া থাকলে
+// ইনভয়েসে ডিফল্ট হিসেবে এই লোগোটাই বসবে (index.html-এর সাইট লোগোর মতোই)
+const STAMP_ICON_B64 = 'data:image/png;base64,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';
+// গোল সিল সম্পূর্ণ CSS/SVG দিয়ে তৈরি (কোনো বাইরের ছবি বসানো হয়নি) — বাঁকানো লেখা
+// টেক্সটপাথ দিয়ে বৃত্তের ধার ঘেঁষে বসানো, রং ইনভয়েসের থিম কালার (--inv-color) অনুসরণ করে।
+function stampSvg(){
+  return `<svg class="inv-stamp-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <path id="stampTopArc" d="M 14,60 A 46,46 0 0 1 106,60" fill="none"/>
+      <path id="stampBottomArc" d="M 14,60 A 46,46 0 0 0 106,60" fill="none"/>
+    </defs>
+    <circle cx="60" cy="60" r="57" fill="none" style="stroke:var(--inv-color)" stroke-width="1.6"/>
+    <circle cx="60" cy="60" r="52" fill="none" style="stroke:var(--inv-color)" stroke-width="1"/>
+    <circle cx="60" cy="60" r="32" fill="none" style="stroke:var(--inv-color)" stroke-width="1"/>
+    <circle cx="14" cy="60" r="1.8" style="fill:var(--inv-color)"/>
+    <circle cx="106" cy="60" r="1.8" style="fill:var(--inv-color)"/>
+    <text font-family="Arial, sans-serif" font-weight="800" font-size="12" letter-spacing="1.3" style="fill:var(--inv-color)">
+      <textPath href="#stampTopArc" startOffset="50%" text-anchor="middle">METHOMART</textPath>
+    </text>
+    <text font-family="Arial, sans-serif" font-weight="700" font-size="6.6" letter-spacing="0.8" style="fill:var(--inv-color)">
+      <textPath href="#stampBottomArc" startOffset="50%" text-anchor="middle">TRUST • QUALITY • SERVICE</textPath>
+    </text>
+    <image href="${STAMP_ICON_B64}" x="34" y="44" width="52" height="32" preserveAspectRatio="xMidYMid meet"/>
+  </svg>`;
+}
+const DEFAULT_INVOICE_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcCAMAAAAshD+zAAAA/1BMVEVrmGvI3J3vpA8zjQqgylscZiJloyLhcgLQ2dKFsmyu0aOXrqAIOBr8xRuzcAHnqF6TpAWLwBx6mIRgfWw+cFReeQm928T/uYn6wUz9/f1ipQMDPBsFQB2GuxddogAPRibL2M15tQra5dPl6udVemRniHQmVzt3synR5rNRmgSmua3n8dd5loW515G0xrqNppc2ZUmw1HIFZAdLc1uSxDECWAiUw1CkzHAvXEKFujZGa1WDnI2bsqXl7NCKvEq8ysIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABllNXAAAAAQHRSTlP/////////////////////////////////////////////////////////////////////////////////////73leyQAAEkJJREFUeNrtnQt/ojjXwKGiddruzOzue+NSQO43BYu1Xuv3/1ZvcpJAQLRamdHOQ367taJ28/fkXHPCCvIfPIQOroPr4Dq4Dq6D6+A6uA6ug+vgOrgOroPr4Dq4Dq6D6+A6uA6ug+vgOrgOroP7z4OLA3EqSTMypOlUDOI/Ay4Wpdnz3vh7NhXjLw4XTBvAijGbWl8WLq6T/b3/20z8knCB9HzKGD1Pt18NLphzAMuZJE3HIh7jqTSfzWp40vYrwXFSm0n7pjEOphUjg6T3deCmbNaSuD3N1ox+ke61DhfMmK2Iz1DL0Tz+AnBIbEsstOA0g7os12Zw63AxMiSzU9GqeKPR9LbhyJKUzpJBPC3opFuGE2d/Lz/hl5mWjkbz24UTQWzx5xSV0M3iG4XDbEvxkvWM6W4TTkRWcvbpSDiWfgVdW3DBZ5dksTRH7etdS3AxWlcXmnJGN705uMvZZHlMV2ZwY3DT5zaC3ymBe45vCk58biewn7asdkI7CtdScCGNgE68Ibjpc2vf9WzU5sJsAS54bi+w2ILk2rKYLcBJf7eYrYhE7awbgQvarRJIo/YShMvhpHbjwZgE0dZNwFm1RWmmQrbInNQ852+8Lf2B/z4mCxMspnQTcNPKNCzBUMkwnJPx5oquoBHqfkCjnZYM5qVw8YyvcE0MVVNVTdMAb3Oa2HxAg6GP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';
+
+async function api(action, data){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify(Object.assign({action, adminToken:getAdminToken()}, data||{}))
+  });
+  return res.json();
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(window._tt); window._tt=setTimeout(()=>t.style.display='none', 2600);
+}
+function money(n){ return (Number(n)||0).toLocaleString('bn-BD',{maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function doLogin(){
+  const username=document.getElementById('loginUser').value.trim();
+  const password=document.getElementById('loginPass').value;
+  const r = await api('adminLogin', {username,password});
+  if(!r.ok){ document.getElementById('loginErr').textContent = r.error||'লগইন ব্যর্থ'; return; }
+  setAdminToken(r.token);
+  boot();
+}
+
+async function boot(){
+  if(!getAdminToken()){
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('appShell').style.display='none';
+    return;
+  }
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='flex';
+  loadTab(currentTab);
+}
+
+/* সাইডবার টগল (মোবাইল) */
+const sidebarNav=document.getElementById('sidebarNav'), overlay=document.getElementById('sidebarOverlay');
+document.getElementById('sidebarToggle').addEventListener('click', ()=>{
+  sidebarNav.classList.toggle('open'); overlay.classList.toggle('show');
+});
+overlay.addEventListener('click', ()=>{ sidebarNav.classList.remove('open'); overlay.classList.remove('show'); });
+
+/* ================= ট্যাব রাউটিং ================= */
+let currentTab='dashboard';
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab=btn.dataset.tab;
+    sidebarNav.classList.remove('open'); overlay.classList.remove('show');
+    loadTab(currentTab);
+  });
+});
+
+function loadTab(tab){
+  const root=document.getElementById('viewRoot');
+  root.innerHTML='<div class="empty">লোড হচ্ছে…</div>';
+  const fn = TAB_LOADERS[tab];
+  if(fn) fn(root); else root.innerHTML='<div class="empty">শীঘ্রই আসছে</div>';
+}
+
+function openModal(html){
+  document.getElementById('modalBox').innerHTML = '<button class="x" onclick="closeModal()">✕</button>'+html;
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+document.getElementById('modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+/* ================= বাংলা সংখ্যা → কথায় (টাকার জন্য) ================= */
+function bnAmountInWords(num){
+  num = Math.round(Number(num)||0);
+  if(num===0) return 'শূন্য টাকা মাত্র';
+  const ones=['','এক','দুই','তিন','চার','পাঁচ','ছয়','সাত','আট','নয়','দশ','এগার','বার','তের','চৌদ্দ','পনের','ষোল','সতের','আঠার','ঊনিশ'];
+  const tens=['','','বিশ','ত্রিশ','চল্লিশ','পঞ্চাশ','ষাট','সত্তর','আশি','নব্বই'];
+  function twoDigit(n){
+    if(n<20) return ones[n];
+    const t=Math.floor(n/10), o=n%10;
+    return o===0? tens[t] : tens[t]+' '+ones[o];
+  }
+  function threeDigit(n){
+    const h=Math.floor(n/100), r=n%100;
+    let s='';
+    if(h) s+= ones[h]+'শত ';
+    if(r) s+= twoDigit(r);
+    return s.trim();
+  }
+  let n=num, parts=[];
+  const crore=Math.floor(n/10000000); n%=10000000;
+  const lakh=Math.floor(n/100000); n%=100000;
+  const thousand=Math.floor(n/1000); n%=1000;
+  const hundred=n;
+  if(crore) parts.push(threeDigit(crore)+' কোটি');
+  if(lakh) parts.push(threeDigit(lakh)+' লক্ষ');
+  if(thousand) parts.push(threeDigit(thousand)+' হাজার');
+  if(hundred) parts.push(threeDigit(hundred));
+  return parts.join(' ')+' টাকা মাত্র';
+}
+
+/* ================= ড্যাশবোর্ড ================= */
+async function loadDashboard(root){
+  const [r, wb] = await Promise.all([api('accGetDashboard', {}), api('accGetCashBankBalance', {})]);
+  if(!r.ok){ root.innerHTML='<div class="empty">'+esc(r.error||'ত্রুটি')+'</div>'; return; }
+  const wallets = wb.wallets || [];
+  root.innerHTML = `
+    <h2 style="color:var(--forest); margin-bottom:14px;">📊 ড্যাশবোর্ড</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">আজকের বিক্রয়</div><div class="val">৳${money(r.today_sales)}</div></div>
+      <div class="stat"><div class="lbl">আজকের ক্রয়</div><div class="val">৳${money(r.today_purchase)}</div></div>
+      <div class="stat"><div class="lbl">আজকের খরচ</div><div class="val">৳${money(r.today_expense)}</div></div>
+      <div class="stat"><div class="lbl">নগদ হাতে</div><div class="val">৳${money(r.cash)}</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">সর্বমোট বিক্রয়</div><div class="val">৳${money(r.total_sales)}</div></div>
+      <div class="stat"><div class="lbl">সর্বমোট ক্রয়</div><div class="val">৳${money(r.total_purchase)}</div></div>
+      <div class="stat"><div class="lbl">সর্বমোট খরচ</div><div class="val">৳${money(r.total_expense)}</div></div>
+      <div class="stat"><div class="lbl">আনুমানিক নিট মুনাফা</div><div class="val">৳${money(r.net_profit)}</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat warn"><div class="lbl">গ্রাহকের কাছে পাওনা</div><div class="val">৳${money(r.total_due)}</div></div>
+      <div class="stat warn"><div class="lbl">সরবরাহকারীকে বাকি</div><div class="val">৳${money(r.total_payable)}</div></div>
+      <div class="stat"><div class="lbl">স্টক মূল্য</div><div class="val">৳${money(r.stock_value)}</div></div>
+      <div class="stat ${r.low_stock_count>0?'warn':''}"><div class="lbl">কম স্টকে পণ্য</div><div class="val">${r.low_stock_count}</div></div>
+    </div>
+    <div class="card"><h2>🏦 ওয়ালেট ব্যালেন্স (নগদ / ব্যাংক / মোবাইল ব্যাংকিং)</h2>
+      <div class="stat-grid">
+        ${wallets.map(w=>`<div class="stat"><div class="lbl">${esc(w.label)}</div><div class="val">৳${money(w.balance)}</div></div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/* ================= জেনেরিক লিস্ট রেন্ডারার ================= */
+function tableHTML(cols, rows){
+  let h='<div class="tbl-wrap"><table><thead><tr>'+cols.map(c=>'<th>'+c.label+'</th>').join('')+'</tr></thead><tbody>';
+  if(!rows.length) h+='<tr><td colspan="'+cols.length+'" class="empty">কোনো তথ্য নেই</td></tr>';
+  rows.forEach(row=>{ h+='<tr>'+cols.map(c=>'<td>'+(c.render?c.render(row):esc(row[c.key]))).join('</td>')+'</tr>'; });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+/* ================= পণ্য (Products) ================= */
+async function loadProducts(root){
+  const r = await api('accGetProducts', {});
+  const products = r.products||[];
+  root.innerHTML = `
+    <div class="card"><h2>📦 পণ্য তালিকা <button class="btn gold sm" onclick="openProductForm()">+ নতুন পণ্য</button> <button class="btn ghost sm" onclick="importWebsiteProducts()">🔄 ওয়েবসাইট থেকে পণ্য ইম্পোর্ট</button></h2>
+    ${tableHTML([
+      {label:'নাম', key:'name'},
+      {label:'ক্যাটাগরি', key:'category'},
+      {label:'একক', key:'unit'},
+      {label:'ক্রয়মূল্য', render:p=>'৳'+money(p.cost_price)},
+      {label:'বিক্রয়মূল্য', render:p=>'৳'+money(p.sale_price)},
+      {label:'স্টক', render:p=>'<b class="'+(p.current_stock<=p.reorder_level?'tag warn':'')+'">'+p.current_stock+'</b>'},
+      {label:'', render:p=>`<button class="btn ghost sm" onclick='editProduct(${JSON.stringify(p)})'>✏️</button> <button class="btn danger sm" onclick="deleteProduct('${p.id}')">🗑️</button>`}
+    ], products)}
+    </div>`;
+}
+async function importWebsiteProducts(){
+  toast('ওয়েবসাইটের সাথে মেলানো হচ্ছে...');
+  // ধাপ ১: Products শিট ওয়েবসাইটের ৬৬টা পণ্যের সাথে সিঙ্ক (আপডেট/নতুন যোগ) করা হয় —
+  // যাতে আগে থেকে না-থাকা বা পুরনো নাম/দামের পণ্যও এখন সঠিক থাকে।
+  const s = await api('adminSyncWebsiteProducts', {});
+  if(!s.ok){ toast(s.error||'সিঙ্ক ব্যর্থ হয়েছে'); return; }
+  // ধাপ ২: সিঙ্ক করা Products শিট থেকে হিসাব সফটওয়্যারে (Acc_Products) ইম্পোর্ট —
+  // সাইজ/জার নাম পণ্যের নামের সাথে জোড়া থাকবে (যেমন "শাহী মশলা (২০০ গ্রাম জার)")
+  const r = await api('accImportProductsFromWebsite', {});
+  if(r.ok){ toast(`ওয়েবসাইটের ${s.total} টা পণ্যের মধ্যে ${r.imported} টা নতুন যোগ হয়েছে (আগে থেকে ছিল: ${r.skipped})`); loadTab('products'); }
+  else toast(r.error||'ত্রুটি');
+}
+function openProductForm(p){
+  p=p||{};
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">${p.id?'পণ্য এডিট':'নতুন পণ্য'}</h2>
+    <div class="field"><label>নাম</label><input id="pf_name" value="${esc(p.name||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>ক্যাটাগরি</label><input id="pf_category" value="${esc(p.category||'')}"></div>
+      <div class="field"><label>একক</label><select id="pf_unit">${['লিটার','কেজি','পিস'].map(u=>`<option value="${u}" ${(p.unit||'পিস')===u?'selected':''}>${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ক্রয়মূল্য</label><input id="pf_cost" type="number" value="${p.cost_price||0}"></div>
+      <div class="field"><label>বিক্রয়মূল্য</label><input id="pf_price" type="number" value="${p.sale_price||0}"></div>
+    </div>
+    <div class="row2">
+      ${p.id?'':'<div class="field"><label>প্রারম্ভিক স্টক</label><input id="pf_opening" type="number" value="0"></div>'}
+      <div class="field"><label>রি-অর্ডার লেভেল</label><input id="pf_reorder" type="number" value="${p.reorder_level||5}"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveProduct('${p.id||''}')">সংরক্ষণ করুন</button>
+  `);
+}
+function editProduct(p){ openProductForm(p); }
+async function saveProduct(id){
+  const payload = {
+    name: document.getElementById('pf_name').value.trim(),
+    category: document.getElementById('pf_category').value.trim(),
+    unit: document.getElementById('pf_unit').value.trim(),
+    cost_price: Number(document.getElementById('pf_cost').value)||0,
+    sale_price: Number(document.getElementById('pf_price').value)||0,
+    reorder_level: Number(document.getElementById('pf_reorder').value)||0
+  };
+  if(!payload.name){ toast('নাম দিন'); return; }
+  let r;
+  if(id){ r = await api('accUpdateProduct', Object.assign({id}, payload)); }
+  else { payload.opening_stock = Number(document.getElementById('pf_opening').value)||0; r = await api('accAddProduct', payload); }
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('products'); } else toast(r.error||'ত্রুটি');
+}
+async function deleteProduct(id){
+  if(!confirm('এই পণ্যটি মুছে ফেলতে চান?')) return;
+  const r = await api('accDeleteProduct', {id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('products'); } else toast(r.error);
+}
+
+/* ================= ইনভেন্টরি ================= */
+async function loadInventory(root){
+  const r = await api('accStockReport', {});
+  const products = r.products||[];
+  root.innerHTML = `
+    <div class="card"><h2>🏬 ইনভেন্টরি (বর্তমান স্টক)</h2>
+    <p class="muted">মোট স্টক মূল্য: ৳${money(r.total_stock_value)}</p>
+    ${tableHTML([
+      {label:'নাম', key:'name'}, {label:'ক্যাটাগরি', key:'category'},
+      {label:'বর্তমান স্টক', render:p=>p.current_stock+' '+esc(p.unit)},
+      {label:'রি-অর্ডার লেভেল', key:'reorder_level'},
+      {label:'স্টক মূল্য', render:p=>'৳'+money(p.stock_value)},
+      {label:'অবস্থা', render:p=>p.low_stock?'<span class="tag warn">⚠ কম স্টক</span>':'<span class="tag ok">ঠিক আছে</span>'},
+      {label:'', render:p=>`<button class="btn ghost sm" onclick="adjustStock('${p.id}','${esc(p.name)}')">±সমন্বয়</button>`}
+    ], products)}
+    </div>`;
+}
+function adjustStock(id, name){
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">স্টক সমন্বয় — ${esc(name)}</h2>
+    <div class="field"><label>পরিমাণ (বাড়াতে + দিন, কমাতে − দিন, যেমন -5)</label><input id="adj_qty" type="number" value="0"></div>
+    <button class="btn gold" style="width:100%;" onclick="doAdjustStock('${id}')">সংরক্ষণ করুন</button>
+  `);
+}
+async function doAdjustStock(id){
+  const qty = Number(document.getElementById('adj_qty').value)||0;
+  const r = await api('accManualStockAdjust', {product_id:id, qty});
+  if(r.ok){ closeModal(); toast('স্টক আপডেট হয়েছে'); loadTab('inventory'); } else toast(r.error);
+}
+
+/* ================= গ্রাহক ================= */
+async function loadCustomers(root){
+  const r = await api('accGetCustomers', {});
+  const list = r.customers||[];
+  root.innerHTML = `
+    <div class="card"><h2>👥 গ্রাহক তালিকা <button class="btn gold sm" onclick="openCustomerForm()">+ নতুন গ্রাহক</button></h2>
+    ${tableHTML([
+      {label:'নাম', key:'name'}, {label:'মোবাইল', key:'phone'}, {label:'ঠিকানা', key:'address'},
+      {label:'মোট পাওনা', render:c=>'৳'+money(c.total_due)},
+      {label:'', render:c=>`<button class="btn ghost sm" onclick='editCustomer(${JSON.stringify(c)})'>✏️</button> <button class="btn danger sm" onclick="deleteCustomer('${c.id}')">🗑️</button>`}
+    ], list)}
+    </div>`;
+}
+function openCustomerForm(c){
+  c=c||{};
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">${c.id?'গ্রাহক এডিট':'নতুন গ্রাহক'}</h2>
+    <div class="field"><label>নাম</label><input id="cf_name" value="${esc(c.name||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>মোবাইল</label><input id="cf_phone" value="${esc(c.phone||'')}"></div>
+      <div class="field"><label>প্রারম্ভিক বাকি</label><input id="cf_due" type="number" value="${c.opening_due||0}"></div>
+    </div>
+    <div class="field"><label>ঠিকানা</label><input id="cf_address" value="${esc(c.address||'')}"></div>
+    <button class="btn gold" style="width:100%;" onclick="saveCustomer('${c.id||''}')">সংরক্ষণ করুন</button>
+  `);
+}
+function editCustomer(c){ openCustomerForm(c); }
+async function saveCustomer(id){
+  const payload={ name:document.getElementById('cf_name').value.trim(), phone:document.getElementById('cf_phone').value.trim(),
+    address:document.getElementById('cf_address').value.trim(), opening_due:Number(document.getElementById('cf_due').value)||0 };
+  if(!payload.name){ toast('নাম দিন'); return; }
+  const r = id? await api('accUpdateCustomer', Object.assign({id},payload)) : await api('accAddCustomer', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('customers'); } else toast(r.error);
+}
+async function deleteCustomer(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r = await api('accDeleteCustomer', {id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('customers'); } else toast(r.error);
+}
+
+/* ================= সরবরাহকারী ================= */
+async function loadSuppliers(root){
+  const r = await api('accGetSuppliers', {});
+  const list = r.suppliers||[];
+  root.innerHTML = `
+    <div class="card"><h2>🚚 সরবরাহকারী তালিকা <button class="btn gold sm" onclick="openSupplierForm()">+ নতুন সরবরাহকারী</button></h2>
+    ${tableHTML([
+      {label:'নাম', key:'name'}, {label:'মোবাইল', key:'phone'}, {label:'ঠিকানা', key:'address'},
+      {label:'মোট বাকি', render:c=>'৳'+money(c.total_due)},
+      {label:'', render:c=>`<button class="btn ghost sm" onclick='editSupplier(${JSON.stringify(c)})'>✏️</button> <button class="btn danger sm" onclick="deleteSupplier('${c.id}')">🗑️</button>`}
+    ], list)}
+    </div>`;
+}
+function openSupplierForm(c){
+  c=c||{};
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">${c.id?'সরবরাহকারী এডিট':'নতুন সরবরাহকারী'}</h2>
+    <div class="field"><label>নাম</label><input id="sf_name" value="${esc(c.name||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>মোবাইল</label><input id="sf_phone" value="${esc(c.phone||'')}"></div>
+      <div class="field"><label>প্রারম্ভিক বাকি</label><input id="sf_due" type="number" value="${c.opening_due||0}"></div>
+    </div>
+    <div class="field"><label>ঠিকানা</label><input id="sf_address" value="${esc(c.address||'')}"></div>
+    <button class="btn gold" style="width:100%;" onclick="saveSupplier('${c.id||''}')">সংরক্ষণ করুন</button>
+  `);
+}
+function editSupplier(c){ openSupplierForm(c); }
+async function saveSupplier(id){
+  const payload={ name:document.getElementById('sf_name').value.trim(), phone:document.getElementById('sf_phone').value.trim(),
+    address:document.getElementById('sf_address').value.trim(), opening_due:Number(document.getElementById('sf_due').value)||0 };
+  if(!payload.name){ toast('নাম দিন'); return; }
+  const r = id? await api('accUpdateSupplier', Object.assign({id},payload)) : await api('accAddSupplier', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('suppliers'); } else toast(r.error);
+}
+async function deleteSupplier(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r = await api('accDeleteSupplier', {id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('suppliers'); } else toast(r.error);
+}
+
+/* ================= বিক্রয় — নতুন (ইনভয়েস তৈরি) ================= */
+let saleItems=[];
+async function loadSaleNew(root){
+  const [prodRes, custRes] = await Promise.all([api('accGetProducts',{}), api('accGetCustomers',{})]);
+  window._products = prodRes.products||[];
+  window._customers = custRes.customers||[];
+  saleItems=[{name:'',qty:1,price:0,product_id:'',unit:''}];
+  root.innerHTML = `
+    <div class="card"><h2>🧾 নতুন বিক্রয় / ইনভয়েস</h2>
+      <div class="row3">
+        <div class="field"><label>তারিখ</label><input id="s_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label>গ্রাহক (ঐচ্ছিক)</label><select id="s_customer" onchange="pickSaleCustomer()"><option value="">— ওয়াক-ইন কাস্টমার —</option>${window._customers.map(c=>`<option value="${c.id}" data-phone="${esc(c.phone)}" data-address="${esc(c.address)}">${esc(c.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="s_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option><option>বাকি</option></select></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>নাম</label><input id="s_name" placeholder="ওয়াক-ইন কাস্টমার"></div>
+        <div class="field"><label>মোবাইল</label><input id="s_phone"></div>
+        <div class="field"><label>ঠিকানা</label><input id="s_address"></div>
+      </div>
+      <h3 style="margin:12px 0 6px; color:var(--forest);">পণ্য তালিকা</h3>
+      <div id="saleItemsWrap"></div>
+      <button class="btn ghost sm" onclick="addSaleItemRow()">+ আরেকটি লাইন</button>
+      <div class="totals-box" id="saleTotalsBox"></div>
+      <div class="row3" style="margin-top:10px;">
+        <div class="field"><label>ডিসকাউন্ট</label><input id="s_discount" type="number" value="0" oninput="renderSaleTotals()"></div>
+        <div class="field"><label>পরিশোধ (Paid)</label><input id="s_paid" type="number" value="0" oninput="renderSaleTotals()"></div>
+        <div class="field"><label>নোট</label><input id="s_note"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>Courier</label><input id="s_courier"></div>
+        <div class="field"><label>CTN</label><input id="s_ctn" type="number" value="0"></div>
+        <div class="field"><label>Fare</label><input id="s_fare" type="number" value="0"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>COD</label><input id="s_cod" type="number" value="0"></div>
+      </div>
+      <button class="btn gold" style="width:100%; margin-top:8px;" onclick="submitSale()">✅ ইনভয়েস তৈরি করুন</button>
+    </div>`;
+  renderSaleItems();
+}
+function pickSaleCustomer(){
+  const sel=document.getElementById('s_customer'); const opt=sel.selectedOptions[0];
+  if(opt && opt.value){
+    document.getElementById('s_name').value = opt.textContent;
+    document.getElementById('s_phone').value = opt.dataset.phone||'';
+    document.getElementById('s_address').value = opt.dataset.address||'';
+  }
+}
+function renderSaleItems(){
+  const wrap=document.getElementById('saleItemsWrap');
+  wrap.innerHTML = saleItems.map((it,i)=>`
+    <div class="item-row">
+      <input list="prodList" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickSaleProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="saleItems[${i}].qty=Number(this.value)||0; renderSaleTotals();">
+      <select onchange="saleItems[${i}].unit=this.value;">${['','লিটার','কেজি','পিস'].map(u=>`<option value="${u}" ${it.unit===u?'selected':''}>${u||'একক বাছুন'}</option>`).join('')}</select>
+      <input type="number" placeholder="দর" value="${it.price}" oninput="saleItems[${i}].price=Number(this.value)||0; renderSaleTotals();">
+      <div>= ৳${money((it.qty||0)*(it.price||0))}</div>
+      <button class="btn danger sm" onclick="removeSaleItem(${i})">✕</button>
+    </div>`).join('') + `<datalist id="prodList">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+  renderSaleTotals();
+}
+function pickSaleProduct(i, name){
+  const p=(window._products||[]).find(x=>x.name===name);
+  saleItems[i].name=name;
+  if(p){ saleItems[i].product_id=p.id; saleItems[i].price=p.sale_price; saleItems[i].unit=p.unit; }
+  renderSaleItems();
+}
+function addSaleItemRow(){ saleItems.push({name:'',qty:1,price:0,product_id:'',unit:''}); renderSaleItems(); }
+function removeSaleItem(i){ saleItems.splice(i,1); if(!saleItems.length) saleItems=[{name:'',qty:1,price:0,product_id:'',unit:''}]; renderSaleItems(); }
+function renderSaleTotals(){
+  const subtotal = saleItems.reduce((s,it)=>s+(Number(it.qty)||0)*(Number(it.price)||0),0);
+  const discount = Number(document.getElementById('s_discount')?.value)||0;
+  const total = subtotal-discount;
+  const paid = Number(document.getElementById('s_paid')?.value)||0;
+  const due = total-paid;
+  const box=document.getElementById('saleTotalsBox');
+  if(box) box.innerHTML = `<div class="tr"><span>সাবটোটাল</span><span>৳${money(subtotal)}</span></div>
+    <div class="tr"><span>ডিসকাউন্ট</span><span>৳${money(discount)}</span></div>
+    <div class="tr grand"><span>মোট</span><span>৳${money(total)}</span></div>
+    <div class="tr"><span>বাকি</span><span>৳${money(due)}</span></div>`;
+}
+async function submitSale(){
+  const items = saleItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const payload = {
+    date: document.getElementById('s_date').value,
+    customer_id: document.getElementById('s_customer').value,
+    customer_name: document.getElementById('s_name').value.trim() || 'ওয়াক-ইন কাস্টমার',
+    phone: document.getElementById('s_phone').value.trim(),
+    address: document.getElementById('s_address').value.trim(),
+    payment_method: document.getElementById('s_pm').value,
+    discount: Number(document.getElementById('s_discount').value)||0,
+    paid: Number(document.getElementById('s_paid').value)||0,
+    note: document.getElementById('s_note').value.trim(),
+    courier: document.getElementById('s_courier').value.trim(),
+    ctn: Number(document.getElementById('s_ctn').value)||0,
+    fare: Number(document.getElementById('s_fare').value)||0,
+    cod: Number(document.getElementById('s_cod').value)||0,
+    items: items.map(it=>({product_id:it.product_id,name:it.name,qty:it.qty,price:it.price,unit:it.unit||''}))
+  };
+  const r = await api('accCreateSale', payload);
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  toast('ইনভয়েস তৈরি হয়েছে: '+r.invoice_no);
+  await printInvoice(r.id);
+  loadTab('sale-list'); document.querySelector('[data-tab="sale-list"]').click();
+}
+
+/* ================= বিক্রয় তালিকা + প্রিন্ট ================= */
+async function loadSaleList(root){
+  root.innerHTML = `<div class="card"><h2>📋 বিক্রয় তালিকা</h2>
+    <div class="search-bar">
+      <input id="sl_q" placeholder="ইনভয়েস/নাম/মোবাইল খুঁজুন" oninput="searchSales()">
+      <input id="sl_from" type="date"> <input id="sl_to" type="date">
+      <button class="btn ghost sm" onclick="searchSales()">ফিল্টার</button>
+    </div>
+    <div id="saleListTbl"></div></div>`;
+  await searchSales();
+}
+async function searchSales(){
+  const r = await api('accGetSales', {query:document.getElementById('sl_q').value, from:document.getElementById('sl_from').value, to:document.getElementById('sl_to').value});
+  const list=r.sales||[];
+  document.getElementById('saleListTbl').innerHTML = tableHTML([
+    {label:'ইনভয়েস', key:'invoice_no'}, {label:'তারিখ', key:'date'}, {label:'গ্রাহক', key:'customer_name'},
+    {label:'মোট', render:s=>'৳'+money(s.total)}, {label:'পরিশোধ', render:s=>'৳'+money(s.paid)},
+    {label:'বাকি', render:s=>'৳'+money(s.due)},
+    {label:'স্ট্যাটাস', render:s=>`<span class="tag ${s.due<=0?'ok':(s.paid>0?'mid':'warn')}">${esc(s.status)}</span>`},
+    {label:'', render:s=>`<button class="btn ghost sm" onclick="printInvoice('${s.id}')">🖨️</button> ${s.due>0?`<button class="btn ghost sm" onclick="collectDue('${s.id}')">৳ আদায়</button>`:''} <button class="btn danger sm" onclick="deleteSale('${s.id}')">🗑️</button>`}
+  ], list);
+}
+function collectDue(id){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">বাকি আদায়</h2>
+    <div class="field"><label>পরিমাণ</label><input id="cd_amount" type="number"></div>
+    <div class="field"><label>মাধ্যম</label><select id="cd_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    <button class="btn gold" style="width:100%;" onclick="doCollectDue('${id}')">সংরক্ষণ করুন</button>`);
+}
+async function doCollectDue(id){
+  const amount=Number(document.getElementById('cd_amount').value)||0;
+  const payment_method=document.getElementById('cd_pm').value;
+  const r=await api('accUpdateSalePayment',{id,amount,payment_method});
+  if(r.ok){ closeModal(); toast('আদায় সংরক্ষিত হয়েছে'); loadTab('sale-list'); } else toast(r.error);
+}
+async function deleteSale(id){
+  if(!confirm('এই ইনভয়েস মুছে ফেলতে চান? (স্টক ফেরত যাবে)')) return;
+  const r=await api('accDeleteSale',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('sale-list'); } else toast(r.error);
+}
+async function printInvoice(id){
+  const r = await api('accGetSaleDetails', {id});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  const s=r.sale, shop=r.shop;
+  // পুরনো ইনভয়েসে item.unit না থাকলে প্রোডাক্ট লিস্ট থেকে একক খুঁজে নেওয়া হয়
+  if(!window._products){ const pr = await api('accGetProducts',{}); window._products = pr.products||[]; }
+  const bnNorm = s => String(s||'').normalize('NFC').replace(/[\u200B\u200C\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+  const unitOf = it => {
+    if (it.unit) return it.unit;
+    const byId = (window._products||[]).find(p=>String(p.id)===String(it.product_id));
+    if (byId && byId.unit) return byId.unit;
+    const nm = bnNorm(it.name);
+    let byName = (window._products||[]).find(p=>bnNorm(p.name)===nm);
+    const baseName = nm.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!byName && baseName) byName = (window._products||[]).find(p=>bnNorm(p.name)===baseName);
+    if (!byName) {
+      const needle = baseName || nm;
+      byName = (window._products||[]).find(p=>{ const pn=bnNorm(p.name); return pn && (pn.indexOf(needle)!==-1 || needle.indexOf(pn)!==-1); });
+    }
+    return (byName && byName.unit) ? byName.unit : '';
+  };
+
+  // শুধু যতগুলো পণ্য আছে ততগুলো সারি — অতিরিক্ত খালি ঘর নেই
+  const rowsHtml = s.items.map((it,i)=>`<tr>
+      <td class="c-no">${i+1}</td>
+      <td class="c-desc">${esc(it.name)}</td>
+      <td class="c-qty">${money(it.qty)}</td>
+      <td class="c-unit">${esc(unitOf(it))}</td>
+      <td class="c-price">${money(it.price)}</td>
+      <td class="c-amt">${money(it.qty*it.price)}</td>
+    </tr>`).join('');
+
+  const tpl = shop.invoice_template || 'classic';
+  const color = shop.invoice_color || '#1F5F3F';
+  const logoSrc = shop.invoice_logo_url || DEFAULT_INVOICE_LOGO;
+  const wordsHtml = shop.invoice_show_words===false ? '' : `<span>কথায়: ${bnAmountInWords(s.total)}</span>`;
+  const termsHtml = shop.invoice_terms ? `<div class="inv-terms">${esc(shop.invoice_terms)}</div>` : '';
+  const footNoteHtml = shop.invoice_footer_note ? `<div class="inv-footnote">${esc(shop.invoice_footer_note)}</div>` : '';
+  const sigHtml = shop.invoice_show_signature===false ? '' : `<div class="inv-foot2"><span>ক্রেতার স্বাক্ষর: .......................</span><span class="inv-seller-sig">${stampSvg()}বিক্রেতার স্বাক্ষর: .............</span></div>`;
+  const courierHtml = `<table class="inv-courier">
+      <tr><td>Courier: ${esc(s.courier||'')}</td></tr>
+      <tr><td>CTN: ${money(s.ctn||0)}</td></tr>
+      <tr><td>Delivery Fare: ${money(s.fare||0)}</td></tr>
+      <tr><td>COD: ${money(s.cod||0)}</td></tr>
+    </table>`;
+
+  document.getElementById('invoicePrint').innerHTML = `
+    <div class="inv-box tpl-${esc(tpl)}" style="--inv-color:${esc(color)};">
+      <img class="inv-watermark" src="${esc(logoSrc)}" alt="">
+      <div class="inv-head2">
+        <div class="inv-head-left">
+          <img class="inv-logo2" src="${esc(logoSrc)}" alt="logo">
+          <div>
+            <div class="inv-shop-bn">${esc(shop.shop_name_bn)}</div>
+            <div class="inv-shop-en">${esc(shop.shop_name_en)}</div>
+            <div class="inv-shop-line">${esc(shop.address)}</div>
+            <div class="inv-shop-line">${esc(shop.phone)}</div>
+          </div>
+        </div>
+        <div class="inv-head-right">
+          <div class="cash-memo-box">Sales Invoice</div>
+          ${shop.fb ? `<div class="inv-contact-line">${esc(shop.fb)}</div>` : ''}
+          ${shop.email ? `<div class="inv-contact-line">📧 ${esc(shop.email)}</div>` : ''}
+          ${shop.website ? `<div class="inv-contact-line">🌐 ${esc(shop.website)}</div>` : ''}
+        </div>
+      </div>
+      <div class="inv-meta-flex">
+        <table class="inv-meta-left">
+          <tr><td class="lbl">নাম:</td><td class="val">${esc(s.customer_name)}</td></tr>
+          <tr><td class="lbl">ঠিকানা:</td><td class="val">${esc(s.address)}</td></tr>
+          <tr><td class="lbl">মোবা:</td><td class="val">${esc(s.phone)}</td></tr>
+        </table>
+        <div class="inv-meta-right">
+          <div class="row"><span class="lbl">চালান নং:</span><span class="val">${esc(s.invoice_no)}</span></div>
+          <div class="row"><span class="lbl">তারিখ:</span><span class="val">${esc(s.date)}</span></div>
+        </div>
+      </div>
+      <div class="inv-tbl-wrap">
+        <table class="inv-tbl">
+          <thead><tr><th>নং</th><th>বিবরণ</th><th>পরিমান</th><th>একক</th><th>দর</th><th>টাকা</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="inv-summary-flex">
+        <div class="inv-words">${wordsHtml}</div>
+        <table class="inv-totals">
+          <tr class="grand"><td>মোট</td><td>৳${money(s.total)}</td></tr>
+          <tr class="paid"><td>পরিশোধ (Paid)</td><td>৳${money(s.paid)}</td></tr>
+          <tr class="due"><td>বাকি (Due)</td><td>৳${money(s.due)}</td></tr>
+        </table>
+      </div>
+      ${courierHtml}
+      ${termsHtml}
+      ${sigHtml}
+      ${footNoteHtml}
+    </div>`;
+
+  // প্রিন্ট/PDF সেভ করার সময় ফাইলের নাম যেন ইনভয়েস নং হয় (ব্রাউজার document.title থেকে ডিফল্ট ফাইলনেম নেয়)
+  const oldTitle = document.title;
+  document.title = s.invoice_no || oldTitle;
+  const restoreTitle = () => { document.title = oldTitle; window.removeEventListener('afterprint', restoreTitle); };
+  window.addEventListener('afterprint', restoreTitle);
+  window.print();
+}
+
+// ক্রয় ইনভয়েস প্রিন্ট — বিক্রয় ইনভয়েসের মতোই দেখতে, তবে হেডারে "Purchase Invoice",
+// নামের জায়গায় সরবরাহকারীর নাম, আর গোল সিলটি এখানে ক্রেতার (আমাদের দোকানের)
+// স্বাক্ষরের ঘরে বসে — কারণ ক্রয়ের ক্ষেত্রে দোকানই ক্রেতা।
+async function printPurchaseInvoice(id){
+  const r = await api('accGetPurchaseDetails', {id});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  const p=r.purchase, shop=r.shop;
+  if(!window._products){ const pr = await api('accGetProducts',{}); window._products = pr.products||[]; }
+  const bnNorm = s => String(s||'').normalize('NFC').replace(/[\u200B\u200C\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+  const unitOf = it => {
+    if (it.unit) return it.unit;
+    const byId = (window._products||[]).find(pd=>String(pd.id)===String(it.product_id));
+    if (byId && byId.unit) return byId.unit;
+    const nm = bnNorm(it.name);
+    let byName = (window._products||[]).find(pd=>bnNorm(pd.name)===nm);
+    const baseName = nm.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!byName && baseName) byName = (window._products||[]).find(pd=>bnNorm(pd.name)===baseName);
+    if (!byName) {
+      const needle = baseName || nm;
+      byName = (window._products||[]).find(pd=>{ const pn=bnNorm(pd.name); return pn && (pn.indexOf(needle)!==-1 || needle.indexOf(pn)!==-1); });
+    }
+    return (byName && byName.unit) ? byName.unit : '';
+  };
+
+  const rowsHtml = p.items.map((it,i)=>`<tr>
+      <td class="c-no">${i+1}</td>
+      <td class="c-desc">${esc(it.name)}</td>
+      <td class="c-qty">${money(it.qty)}</td>
+      <td class="c-unit">${esc(unitOf(it))}</td>
+      <td class="c-price">${money(it.price)}</td>
+      <td class="c-amt">${money(it.qty*it.price)}</td>
+    </tr>`).join('');
+
+  const tpl = shop.invoice_template || 'classic';
+  const color = shop.invoice_color || '#1F5F3F';
+  const logoSrc = shop.invoice_logo_url || DEFAULT_INVOICE_LOGO;
+  const wordsHtml = shop.invoice_show_words===false ? '' : `<span>কথায়: ${bnAmountInWords(p.total)}</span>`;
+  const termsHtml = shop.invoice_terms ? `<div class="inv-terms">${esc(shop.invoice_terms)}</div>` : '';
+  const footNoteHtml = shop.invoice_footer_note ? `<div class="inv-footnote">${esc(shop.invoice_footer_note)}</div>` : '';
+  // ক্রয়ের ক্ষেত্রে দোকান নিজেই ক্রেতা, তাই গোল সিলটি এখানে "ক্রেতার স্বাক্ষর"-এর ঘরে বসছে
+  const sigHtml = shop.invoice_show_signature===false ? '' : `<div class="inv-foot2"><span class="inv-seller-sig">${stampSvg()}ক্রেতার স্বাক্ষর: .......................</span><span>সরবরাহকারীর স্বাক্ষর: .............</span></div>`;
+
+  document.getElementById('invoicePrint').innerHTML = `
+    <div class="inv-box tpl-${esc(tpl)}" style="--inv-color:${esc(color)};">
+      <img class="inv-watermark" src="${esc(logoSrc)}" alt="">
+      <div class="inv-head2">
+        <div class="inv-head-left">
+          <img class="inv-logo2" src="${esc(logoSrc)}" alt="logo">
+          <div>
+            <div class="inv-shop-bn">${esc(shop.shop_name_bn)}</div>
+            <div class="inv-shop-en">${esc(shop.shop_name_en)}</div>
+            <div class="inv-shop-line">${esc(shop.address)}</div>
+            <div class="inv-shop-line">${esc(shop.phone)}</div>
+          </div>
+        </div>
+        <div class="inv-head-right">
+          <div class="cash-memo-box">Purchase Invoice</div>
+          ${shop.fb ? `<div class="inv-contact-line">${esc(shop.fb)}</div>` : ''}
+          ${shop.email ? `<div class="inv-contact-line">📧 ${esc(shop.email)}</div>` : ''}
+          ${shop.website ? `<div class="inv-contact-line">🌐 ${esc(shop.website)}</div>` : ''}
+        </div>
+      </div>
+      <div class="inv-meta-flex">
+        <table class="inv-meta-left">
+          <tr><td class="lbl">নাম:</td><td class="val">${esc(p.supplier_name)}</td></tr>
+          <tr><td class="lbl">ঠিকানা:</td><td class="val">${esc(p.address||'')}</td></tr>
+          <tr><td class="lbl">মোবা:</td><td class="val">${esc(p.phone||'')}</td></tr>
+        </table>
+        <div class="inv-meta-right">
+          <div class="row"><span class="lbl">চালান নং:</span><span class="val">${esc(p.purchase_no)}</span></div>
+          <div class="row"><span class="lbl">তারিখ:</span><span class="val">${esc(p.date)}</span></div>
+        </div>
+      </div>
+      <div class="inv-tbl-wrap">
+        <table class="inv-tbl">
+          <thead><tr><th>নং</th><th>বিবরণ</th><th>পরিমান</th><th>একক</th><th>দর</th><th>টাকা</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="inv-summary-flex">
+        <div class="inv-words">${wordsHtml}</div>
+        <table class="inv-totals">
+          <tr class="grand"><td>মোট</td><td>৳${money(p.total)}</td></tr>
+          <tr class="paid"><td>পরিশোধ (Paid)</td><td>৳${money(p.paid)}</td></tr>
+          <tr class="due"><td>বাকি (Due)</td><td>৳${money(p.due)}</td></tr>
+        </table>
+      </div>
+      ${termsHtml}
+      ${sigHtml}
+      ${footNoteHtml}
+    </div>`;
+
+  const oldTitle = document.title;
+  document.title = p.purchase_no || oldTitle;
+  const restoreTitle = () => { document.title = oldTitle; window.removeEventListener('afterprint', restoreTitle); };
+  window.addEventListener('afterprint', restoreTitle);
+  window.print();
+}
+
+/* ================= বিক্রয় ফেরত ================= */
+let returnItems=[];
+async function loadSaleReturn(root){
+  const prodRes = await api('accGetProducts',{}); window._products = prodRes.products||[];
+  returnItems=[{name:'',qty:1,price:0,product_id:''}];
+  root.innerHTML = `<div class="card"><h2>↩️ বিক্রয় ফেরত</h2>
+    <div class="row2">
+      <div class="field"><label>ইনভয়েস নং</label><input id="sr_invoice"></div>
+      <div class="field"><label>গ্রাহকের নাম</label><input id="sr_customer"></div>
+    </div>
+    <div id="srItemsWrap"></div>
+    <button class="btn ghost sm" onclick="addReturnItemRow()">+ আরেকটি লাইন</button>
+    <div class="field" style="margin-top:10px;"><label>কারণ</label><input id="sr_reason"></div>
+    <button class="btn gold" style="width:100%;" onclick="submitSaleReturn()">✅ ফেরত সংরক্ষণ করুন</button>
+    </div>
+    <div class="card"><h2>ফেরতের ইতিহাস</h2><div id="srHistory"></div></div>`;
+  renderReturnItems();
+  const hist = await api('accGetSalesReturns', {});
+  document.getElementById('srHistory').innerHTML = tableHTML([
+    {label:'তারিখ', key:'date'}, {label:'ইনভয়েস', key:'invoice_no'}, {label:'গ্রাহক', key:'customer_name'},
+    {label:'মোট', render:x=>'৳'+money(x.total)}, {label:'কারণ', key:'reason'}
+  ], hist.returns||[]);
+}
+function renderReturnItems(){
+  const wrap=document.getElementById('srItemsWrap');
+  wrap.innerHTML = returnItems.map((it,i)=>`
+    <div class="item-row no-unit">
+      <input list="prodList2" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickReturnProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="returnItems[${i}].qty=Number(this.value)||0;">
+      <input type="number" placeholder="দর" value="${it.price}" oninput="returnItems[${i}].price=Number(this.value)||0;">
+      <div></div>
+      <button class="btn danger sm" onclick="returnItems.splice(${i},1); renderReturnItems();">✕</button>
+    </div>`).join('') + `<datalist id="prodList2">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+}
+function pickReturnProduct(i,name){ const p=(window._products||[]).find(x=>x.name===name); returnItems[i].name=name; if(p){returnItems[i].product_id=p.id; returnItems[i].price=p.sale_price;} renderReturnItems(); }
+function addReturnItemRow(){ returnItems.push({name:'',qty:1,price:0,product_id:''}); renderReturnItems(); }
+async function submitSaleReturn(){
+  const items=returnItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const r = await api('accCreateSalesReturn', {invoice_no:document.getElementById('sr_invoice').value.trim(), customer_name:document.getElementById('sr_customer').value.trim(), reason:document.getElementById('sr_reason').value.trim(), items});
+  if(r.ok){ toast('ফেরত সংরক্ষিত হয়েছে'); loadTab('sale-return'); } else toast(r.error);
+}
+
+/* ================= নতুন ক্রয় ================= */
+let purchaseItems=[];
+async function loadPurchaseNew(root){
+  const [prodRes, supRes] = await Promise.all([api('accGetProducts',{}), api('accGetSuppliers',{})]);
+  window._products=prodRes.products||[]; window._suppliers=supRes.suppliers||[];
+  purchaseItems=[{name:'',qty:1,price:0,product_id:''}];
+  root.innerHTML = `<div class="card"><h2>🛒 নতুন ক্রয়</h2>
+    <div class="row3">
+      <div class="field"><label>তারিখ</label><input id="p_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>সরবরাহকারী</label><select id="p_supplier">${window._suppliers.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="p_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option><option>বাকি</option></select></div>
+    </div>
+    <div id="purchItemsWrap"></div>
+    <button class="btn ghost sm" onclick="addPurchaseItemRow()">+ আরেকটি লাইন</button>
+    <div class="totals-box" id="purchTotalsBox"></div>
+    <div class="row2" style="margin-top:10px;">
+      <div class="field"><label>ডিসকাউন্ট</label><input id="p_discount" type="number" value="0" oninput="renderPurchaseTotals()"></div>
+      <div class="field"><label>পরিশোধ (Paid)</label><input id="p_paid" type="number" value="0" oninput="renderPurchaseTotals()"></div>
+    </div>
+    <button class="btn gold" style="width:100%; margin-top:8px;" onclick="submitPurchase()">✅ ক্রয় সংরক্ষণ করুন</button>
+    </div>`;
+  renderPurchaseItems();
+}
+function renderPurchaseItems(){
+  const wrap=document.getElementById('purchItemsWrap');
+  wrap.innerHTML = purchaseItems.map((it,i)=>`
+    <div class="item-row no-unit">
+      <input list="prodList3" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickPurchaseProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="purchaseItems[${i}].qty=Number(this.value)||0; renderPurchaseTotals();">
+      <input type="number" placeholder="দর" value="${it.price}" oninput="purchaseItems[${i}].price=Number(this.value)||0; renderPurchaseTotals();">
+      <div>= ৳${money((it.qty||0)*(it.price||0))}</div>
+      <button class="btn danger sm" onclick="purchaseItems.splice(${i},1); if(!purchaseItems.length) purchaseItems=[{name:'',qty:1,price:0,product_id:''}]; renderPurchaseItems();">✕</button>
+    </div>`).join('') + `<datalist id="prodList3">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+  renderPurchaseTotals();
+}
+function pickPurchaseProduct(i,name){ const p=(window._products||[]).find(x=>x.name===name); purchaseItems[i].name=name; if(p){purchaseItems[i].product_id=p.id; purchaseItems[i].price=p.cost_price;} renderPurchaseItems(); }
+function addPurchaseItemRow(){ purchaseItems.push({name:'',qty:1,price:0,product_id:''}); renderPurchaseItems(); }
+function renderPurchaseTotals(){
+  const subtotal=purchaseItems.reduce((s,it)=>s+(Number(it.qty)||0)*(Number(it.price)||0),0);
+  const discount=Number(document.getElementById('p_discount')?.value)||0;
+  const total=subtotal-discount; const paid=Number(document.getElementById('p_paid')?.value)||0; const due=total-paid;
+  const box=document.getElementById('purchTotalsBox');
+  if(box) box.innerHTML=`<div class="tr"><span>সাবটোটাল</span><span>৳${money(subtotal)}</span></div><div class="tr"><span>ডিসকাউন্ট</span><span>৳${money(discount)}</span></div><div class="tr grand"><span>মোট</span><span>৳${money(total)}</span></div><div class="tr"><span>বাকি</span><span>৳${money(due)}</span></div>`;
+}
+async function submitPurchase(){
+  const items=purchaseItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const sel=document.getElementById('p_supplier'); const supOpt=sel.selectedOptions[0];
+  const payload={ date:document.getElementById('p_date').value, supplier_id:sel.value, supplier_name:supOpt?supOpt.textContent:'',
+    payment_method:document.getElementById('p_pm').value, discount:Number(document.getElementById('p_discount').value)||0,
+    paid:Number(document.getElementById('p_paid').value)||0, items:items.map(it=>({product_id:it.product_id,name:it.name,qty:it.qty,price:it.price})) };
+  const r=await api('accCreatePurchase', payload);
+  if(!r.ok){ toast(r.error); return; }
+  toast('ক্রয় সংরক্ষিত হয়েছে: '+r.purchase_no);
+  await printPurchaseInvoice(r.id);
+  loadTab('purchase-list'); document.querySelector('[data-tab="purchase-list"]').click();
+}
+
+/* ================= ক্রয় তালিকা ================= */
+async function loadPurchaseList(root){
+  const r = await api('accGetPurchases', {});
+  const list=r.purchases||[];
+  root.innerHTML = `<div class="card"><h2>📋 ক্রয় তালিকা</h2>
+    ${tableHTML([
+      {label:'ক্রয় নং', key:'purchase_no'}, {label:'তারিখ', key:'date'}, {label:'সরবরাহকারী', key:'supplier_name'},
+      {label:'মোট', render:p=>'৳'+money(p.total)}, {label:'পরিশোধ', render:p=>'৳'+money(p.paid)}, {label:'বাকি', render:p=>'৳'+money(p.due)},
+      {label:'স্ট্যাটাস', render:p=>`<span class="tag ${p.due<=0?'ok':(p.paid>0?'mid':'warn')}">${esc(p.status)}</span>`},
+      {label:'', render:p=>`<button class="btn ghost sm" onclick="printPurchaseInvoice('${p.id}')">🖨️</button> ${p.due>0?`<button class="btn ghost sm" onclick="payPurchaseDue('${p.id}')">৳ পরিশোধ</button>`:''} <button class="btn danger sm" onclick="deletePurchase('${p.id}')">🗑️</button>`}
+    ], list)}
+    </div>`;
+}
+function payPurchaseDue(id){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">বাকি পরিশোধ</h2>
+    <div class="field"><label>পরিমাণ</label><input id="pp_amount" type="number"></div>
+    <div class="field"><label>মাধ্যম</label><select id="pp_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    <button class="btn gold" style="width:100%;" onclick="doPayPurchaseDue('${id}')">সংরক্ষণ করুন</button>`);
+}
+async function doPayPurchaseDue(id){
+  const amount=Number(document.getElementById('pp_amount').value)||0; const payment_method=document.getElementById('pp_pm').value;
+  const r=await api('accUpdatePurchasePayment',{id,amount,payment_method});
+  if(r.ok){ closeModal(); toast('পরিশোধ সংরক্ষিত হয়েছে'); loadTab('purchase-list'); } else toast(r.error);
+}
+async function deletePurchase(id){
+  if(!confirm('মুছে ফেলতে চান? (স্টক কমে যাবে)')) return;
+  const r=await api('accDeletePurchase',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('purchase-list'); } else toast(r.error);
+}
+
+/* ================= ক্রয় ফেরত ================= */
+let purReturnItems=[];
+async function loadPurchaseReturn(root){
+  const prodRes=await api('accGetProducts',{}); window._products=prodRes.products||[];
+  purReturnItems=[{name:'',qty:1,price:0,product_id:''}];
+  root.innerHTML = `<div class="card"><h2>↩️ ক্রয় ফেরত</h2>
+    <div class="row2">
+      <div class="field"><label>ক্রয় নং</label><input id="pr_no"></div>
+      <div class="field"><label>সরবরাহকারীর নাম</label><input id="pr_supplier"></div>
+    </div>
+    <div id="prItemsWrap"></div>
+    <button class="btn ghost sm" onclick="addPurReturnRow()">+ আরেকটি লাইন</button>
+    <div class="field" style="margin-top:10px;"><label>কারণ</label><input id="pr_reason"></div>
+    <button class="btn gold" style="width:100%;" onclick="submitPurchaseReturn()">✅ ফেরত সংরক্ষণ করুন</button></div>
+    <div class="card"><h2>ফেরতের ইতিহাস</h2><div id="prHistory"></div></div>`;
+  renderPurReturnItems();
+  const hist=await api('accGetPurchaseReturns',{});
+  document.getElementById('prHistory').innerHTML = tableHTML([
+    {label:'তারিখ', key:'date'}, {label:'ক্রয় নং', key:'purchase_no'}, {label:'সরবরাহকারী', key:'supplier_name'},
+    {label:'মোট', render:x=>'৳'+money(x.total)}, {label:'কারণ', key:'reason'}
+  ], hist.returns||[]);
+}
+function renderPurReturnItems(){
+  const wrap=document.getElementById('prItemsWrap');
+  wrap.innerHTML = purReturnItems.map((it,i)=>`
+    <div class="item-row no-unit">
+      <input list="prodList4" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickPurReturnProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="purReturnItems[${i}].qty=Number(this.value)||0;">
+      <input type="number" placeholder="দর" value="${it.price}" oninput="purReturnItems[${i}].price=Number(this.value)||0;">
+      <div></div>
+      <button class="btn danger sm" onclick="purReturnItems.splice(${i},1); renderPurReturnItems();">✕</button>
+    </div>`).join('') + `<datalist id="prodList4">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+}
+function pickPurReturnProduct(i,name){ const p=(window._products||[]).find(x=>x.name===name); purReturnItems[i].name=name; if(p){purReturnItems[i].product_id=p.id; purReturnItems[i].price=p.cost_price;} renderPurReturnItems(); }
+function addPurReturnRow(){ purReturnItems.push({name:'',qty:1,price:0,product_id:''}); renderPurReturnItems(); }
+async function submitPurchaseReturn(){
+  const items=purReturnItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const r=await api('accCreatePurchaseReturn', {purchase_no:document.getElementById('pr_no').value.trim(), supplier_name:document.getElementById('pr_supplier').value.trim(), reason:document.getElementById('pr_reason').value.trim(), items});
+  if(r.ok){ toast('ফেরত সংরক্ষিত হয়েছে'); loadTab('purchase-return'); } else toast(r.error);
+}
+
+/* ================= খরচ ================= */
+async function loadExpenses(root){
+  const listsRes = await api('accGetLists',{});
+  window._expHeads = (listsRes.lists&&listsRes.lists.expense_head)||[];
+  const r = await api('accGetExpenses', {});
+  root.innerHTML = `<div class="card"><h2>💸 খরচ <button class="btn gold sm" onclick="openExpenseForm()">+ নতুন খরচ</button></h2>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'খাত', key:'head'}, {label:'বিবরণ', key:'description'},
+      {label:'পরিমাণ', render:e=>'৳'+money(e.amount)}, {label:'মাধ্যম', key:'payment_method'},
+      {label:'', render:e=>`<button class="btn danger sm" onclick="deleteExpense('${e.id}')">🗑️</button>`}
+    ], r.expenses||[])}
+    </div>`;
+}
+function openExpenseForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন খরচ</h2>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="ex_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>খাত</label><select id="ex_head">${window._expHeads.map(h=>`<option>${esc(h)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>বিবরণ</label><input id="ex_desc"></div>
+    <div class="row2">
+      <div class="field"><label>পরিমাণ</label><input id="ex_amount" type="number"></div>
+      <div class="field"><label>মাধ্যম</label><select id="ex_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveExpense()">সংরক্ষণ করুন</button>`);
+}
+async function saveExpense(){
+  const payload={ date:document.getElementById('ex_date').value, head:document.getElementById('ex_head').value, description:document.getElementById('ex_desc').value.trim(), amount:Number(document.getElementById('ex_amount').value)||0, payment_method:document.getElementById('ex_pm').value };
+  const r = await api('accAddExpense', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('expenses'); } else toast(r.error);
+}
+async function deleteExpense(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r=await api('accDeleteExpense',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('expenses'); } else toast(r.error);
+}
+
+/* ================= ক্যাশ ও ব্যাংক ================= */
+async function loadCashBank(root){
+  const [bal, txns] = await Promise.all([api('accGetCashBankBalance',{}), api('accGetCashBankTxns',{})]);
+  window._bankName = bal.bank_name||'ব্যাংক হিসাব';
+  const wallets = bal.wallets || [];
+  root.innerHTML = `
+    <div class="stat-grid">
+      ${wallets.map(w=>`<div class="stat"><div class="lbl">${esc(w.label)}</div><div class="val">৳${money(w.balance)}</div></div>`).join('')}
+      <div class="stat"><div class="lbl">সর্বমোট</div><div class="val">৳${money(bal.total)}</div></div>
+    </div>
+    <div class="card"><h2>🏦 লেনদেন <button class="btn gold sm" onclick="openCashBankForm()">+ নতুন লেনদেন</button></h2>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'হিসাব', key:'account_name'},
+      {label:'ধরন', render:t=>t.type==='in'?'<span class="tag ok">জমা</span>':'<span class="tag warn">উত্তোলন</span>'},
+      {label:'খাত', key:'category'}, {label:'বিবরণ', key:'description'}, {label:'পরিমাণ', render:t=>'৳'+money(t.amount)}
+    ], txns.txns||[])}
+    </div>`;
+}
+function openCashBankForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন লেনদেন</h2>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="cb_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>হিসাব (ওয়ালেট)</label><select id="cb_account"><option>নগদ (ক্যাশ)</option><option>${esc(window._bankName)}</option><option>বিকাশ (bKash)</option><option>নগদ (Nagad)</option><option>রকেট (Rocket)</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ধরন</label><select id="cb_type"><option value="in">জমা (আয়)</option><option value="out">উত্তোলন (ব্যয়)</option></select></div>
+      <div class="field"><label>পরিমাণ</label><input id="cb_amount" type="number"></div>
+    </div>
+    <div class="field"><label>খাত (যেমন: মালিকের বিনিয়োগ, বিবিধ আয়)</label><input id="cb_category"></div>
+    <div class="field"><label>বিবরণ</label><input id="cb_desc"></div>
+    <button class="btn gold" style="width:100%;" onclick="saveCashBank()">সংরক্ষণ করুন</button>`);
+}
+async function saveCashBank(){
+  const payload={ date:document.getElementById('cb_date').value, account_name:document.getElementById('cb_account').value, type:document.getElementById('cb_type').value, amount:Number(document.getElementById('cb_amount').value)||0, category:document.getElementById('cb_category').value.trim(), description:document.getElementById('cb_desc').value.trim() };
+  const r = await api('accAddCashBankTxn', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('cashbank'); } else toast(r.error);
+}
+
+/* ================= চার্ট অব অ্যাকাউন্টস ================= */
+async function loadCOA(root){
+  const r = await api('accGetChartOfAccounts', {});
+  root.innerHTML = `<div class="card"><h2>📚 চার্ট অব অ্যাকাউন্টস <button class="btn gold sm" onclick="openAccountForm()">+ নতুন অ্যাকাউন্ট</button></h2>
+    ${tableHTML([
+      {label:'কোড', key:'code'}, {label:'নাম', key:'name'}, {label:'ধরন', key:'type'},
+      {label:'প্রারম্ভিক ব্যালেন্স', render:a=>'৳'+money(a.opening_balance)},
+      {label:'', render:a=>`<button class="btn ghost sm" onclick="loadLedgerFor('${a.id}')">📖 লেজার</button> <button class="btn danger sm" onclick="deleteAccount('${a.id}')">🗑️</button>`}
+    ], r.accounts||[])}
+    </div>`;
+}
+function openAccountForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন অ্যাকাউন্ট</h2>
+    <div class="field"><label>নাম</label><input id="ac_name"></div>
+    <div class="row2">
+      <div class="field"><label>ধরন</label><select id="ac_type"><option>Asset</option><option>Liability</option><option>Equity</option><option>Revenue</option><option>Expense</option></select></div>
+      <div class="field"><label>প্রারম্ভিক ব্যালেন্স</label><input id="ac_opening" type="number" value="0"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveAccount()">সংরক্ষণ করুন</button>`);
+}
+async function saveAccount(){
+  const r=await api('accAddAccount', {name:document.getElementById('ac_name').value.trim(), type:document.getElementById('ac_type').value, opening_balance:Number(document.getElementById('ac_opening').value)||0});
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('coa'); } else toast(r.error);
+}
+async function deleteAccount(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r=await api('accDeleteAccount',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('coa'); } else toast(r.error);
+}
+function loadLedgerFor(accountId){
+  document.querySelector('[data-tab="ledger"]').click();
+  setTimeout(()=>{ const sel=document.getElementById('lg_account'); if(sel){ sel.value=accountId; showLedger(); } }, 400);
+}
+
+/* ================= জার্নাল ================= */
+let journalLines=[{account_id:'',debit:0,credit:0},{account_id:'',debit:0,credit:0}];
+async function loadJournal(root){
+  const coaRes=await api('accGetChartOfAccounts',{}); window._coa=coaRes.accounts||[];
+  journalLines=[{account_id:'',debit:0,credit:0},{account_id:'',debit:0,credit:0}];
+  const r = await api('accGetJournal', {});
+  root.innerHTML = `<div class="card"><h2>📝 নতুন জার্নাল এন্ট্রি</h2>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="jr_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>বিবরণ</label><input id="jr_desc"></div>
+    </div>
+    <div id="jrLinesWrap"></div>
+    <button class="btn ghost sm" onclick="journalLines.push({account_id:'',debit:0,credit:0}); renderJournalLines();">+ আরেকটি লাইন</button>
+    <div class="totals-box" id="jrTotalsBox"></div>
+    <button class="btn gold" style="width:100%; margin-top:8px;" onclick="submitJournal()">✅ পোস্ট করুন</button>
+    </div>
+    <div class="card"><h2>জার্নাল ইতিহাস</h2>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'ভাউচার', key:'voucher_no'}, {label:'অ্যাকাউন্ট', key:'account_name'},
+      {label:'ডেবিট', render:j=>j.debit?'৳'+money(j.debit):''}, {label:'ক্রেডিট', render:j=>j.credit?'৳'+money(j.credit):''}, {label:'বিবরণ', key:'description'}
+    ], r.entries||[])}
+    </div>`;
+  renderJournalLines();
+}
+function renderJournalLines(){
+  const wrap=document.getElementById('jrLinesWrap');
+  wrap.innerHTML = journalLines.map((l,i)=>`
+    <div class="item-row" style="grid-template-columns:2fr 1fr 1fr auto;">
+      <select onchange="journalLines[${i}].account_id=this.value;">
+        <option value="">— অ্যাকাউন্ট বাছুন —</option>
+        ${window._coa.map(a=>`<option value="${a.id}" ${l.account_id===a.id?'selected':''}>${esc(a.name)} (${a.type})</option>`).join('')}
+      </select>
+      <input type="number" placeholder="ডেবিট" value="${l.debit||''}" oninput="journalLines[${i}].debit=Number(this.value)||0; journalLines[${i}].credit=0; renderJournalTotals();">
+      <input type="number" placeholder="ক্রেডিট" value="${l.credit||''}" oninput="journalLines[${i}].credit=Number(this.value)||0; journalLines[${i}].debit=0; renderJournalTotals();">
+      <button class="btn danger sm" onclick="journalLines.splice(${i},1); renderJournalLines();">✕</button>
+    </div>`).join('');
+  renderJournalTotals();
+}
+function renderJournalTotals(){
+  const dr=journalLines.reduce((s,l)=>s+(Number(l.debit)||0),0), cr=journalLines.reduce((s,l)=>s+(Number(l.credit)||0),0);
+  const box=document.getElementById('jrTotalsBox');
+  if(box) box.innerHTML = `<div class="tr"><span>মোট ডেবিট</span><span>৳${money(dr)}</span></div><div class="tr"><span>মোট ক্রেডিট</span><span>৳${money(cr)}</span></div><div class="tr grand"><span>${dr===cr?'✅ মিলেছে':'⚠️ অমিল'}</span><span></span></div>`;
+}
+async function submitJournal(){
+  const lines=journalLines.filter(l=>l.account_id && (l.debit||l.credit));
+  const r=await api('accAddJournalEntry', {date:document.getElementById('jr_date').value, description:document.getElementById('jr_desc').value.trim(), lines});
+  if(r.ok){ toast('জার্নাল পোস্ট হয়েছে'); loadTab('journal'); } else toast(r.error);
+}
+
+/* ================= লেজার ================= */
+async function loadLedger(root){
+  const coaRes=await api('accGetChartOfAccounts',{}); window._coa=coaRes.accounts||[];
+  root.innerHTML = `<div class="card"><h2>📖 লেজার</h2>
+    <div class="field"><label>অ্যাকাউন্ট বাছুন</label><select id="lg_account" onchange="showLedger()"><option value="">— বাছুন —</option>${window._coa.map(a=>`<option value="${a.id}">${esc(a.name)} (${a.type})</option>`).join('')}</select></div>
+    <div id="lgResult"></div></div>`;
+}
+async function showLedger(){
+  const id=document.getElementById('lg_account').value;
+  if(!id){ document.getElementById('lgResult').innerHTML=''; return; }
+  const r = await api('accGetLedger', {account_id:id});
+  if(!r.ok){ toast(r.error); return; }
+  document.getElementById('lgResult').innerHTML = `<h3 style="margin:10px 0; color:var(--forest);">${esc(r.account.name)} — সমাপনী ব্যালেন্স: ৳${money(r.closing_balance)}</h3>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'ভাউচার', key:'voucher_no'}, {label:'বিবরণ', key:'description'},
+      {label:'ডেবিট', render:x=>x.debit?'৳'+money(x.debit):''}, {label:'ক্রেডিট', render:x=>x.credit?'৳'+money(x.credit):''}, {label:'ব্যালেন্স', render:x=>'৳'+money(x.balance)}
+    ], r.rows)}`;
+}
+
+/* ================= ট্রায়াল ব্যালেন্স ================= */
+async function loadTrialBalance(root){
+  const r = await api('accGetTrialBalance', {});
+  root.innerHTML = `<div class="card"><h2>⚖️ ট্রায়াল ব্যালেন্স</h2>
+    ${tableHTML([
+      {label:'অ্যাকাউন্ট', key:'name'}, {label:'ধরন', key:'type'},
+      {label:'ডেবিট', render:x=>x.debit?'৳'+money(x.debit):''}, {label:'ক্রেডিট', render:x=>x.credit?'৳'+money(x.credit):''}
+    ], r.rows||[])}
+    <div class="totals-box"><div class="tr grand"><span>মোট ডেবিট</span><span>৳${money(r.total_debit)}</span></div><div class="tr grand"><span>মোট ক্রেডিট</span><span>৳${money(r.total_credit)}</span></div></div>
+    </div>`;
+}
+
+/* ================= রিপোর্ট: লাভ-ক্ষতি ================= */
+async function loadRepPL(root){
+  root.innerHTML = `<div class="card"><h2>📈 লাভ-ক্ষতি হিসাব</h2>
+    <div class="row2"><div class="field"><label>থেকে</label><input id="pl_from" type="date"></div><div class="field"><label>পর্যন্ত</label><input id="pl_to" type="date"></div></div>
+    <button class="btn ghost sm" onclick="runPL()">রিপোর্ট দেখুন</button>
+    <div id="plResult" style="margin-top:14px;"></div></div>`;
+  runPL();
+}
+async function runPL(){
+  const r = await api('accGetProfitLoss', {from:document.getElementById('pl_from').value, to:document.getElementById('pl_to').value});
+  document.getElementById('plResult').innerHTML = `
+    <h3 style="color:var(--forest);">আয় (Revenue)</h3>
+    ${tableHTML([{label:'খাত', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.revenue||[])}
+    <p style="text-align:right; font-weight:800; margin:6px 0;">মোট আয়: ৳${money(r.total_revenue)}</p>
+    <p style="text-align:right; color:var(--muted); margin:2px 0;">বিক্রিত পণ্যের ব্যয় (COGS): ৳${money(r.cogs_amount)}</p>
+    <div class="totals-box"><div class="tr grand"><span>গ্রস মুনাফা (Gross Profit)</span><span>৳${money(r.gross_profit)}</span></div></div>
+    <h3 style="color:var(--forest); margin-top:12px;">খরচ (Expense — COGS সহ)</h3>
+    ${tableHTML([{label:'খাত', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.expense||[])}
+    <p style="text-align:right; font-weight:800; margin:6px 0;">মোট খরচ: ৳${money(r.total_expense)} <span style="font-weight:400; color:var(--muted);">(পরিচালন খরচ: ৳${money(r.operating_expense)})</span></p>
+    <div class="totals-box"><div class="tr grand"><span>নিট মুনাফা</span><span>৳${money(r.net_profit)}</span></div></div>`;
+}
+
+/* ================= রিপোর্ট: ব্যালেন্স শীট ================= */
+async function loadRepBS(root){
+  root.innerHTML = `<div class="card"><h2>🏛️ ব্যালেন্স শীট</h2>
+    <div class="field" style="max-width:220px;"><label>তারিখ পর্যন্ত</label><input id="bs_asof" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <button class="btn ghost sm" onclick="runBS()">রিপোর্ট দেখুন</button>
+    <div id="bsResult" style="margin-top:14px;"></div></div>`;
+  runBS();
+}
+async function runBS(){
+  const r = await api('accGetBalanceSheet', {as_of:document.getElementById('bs_asof').value});
+  document.getElementById('bsResult').innerHTML = `
+    <div class="row2">
+      <div>
+        <h3 style="color:var(--forest);">সম্পদ (Assets)</h3>
+        ${tableHTML([{label:'নাম', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.assets||[])}
+        <p style="text-align:right; font-weight:800; margin-top:6px;">মোট সম্পদ: ৳${money(r.total_assets)}</p>
+      </div>
+      <div>
+        <h3 style="color:var(--forest);">দায় (Liabilities)</h3>
+        ${tableHTML([{label:'নাম', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.liabilities||[])}
+        <p style="text-align:right; font-weight:800; margin-top:6px;">মোট দায়: ৳${money(r.total_liabilities)}</p>
+        <h3 style="color:var(--forest); margin-top:12px;">মালিকানা স্বত্ব (Equity)</h3>
+        ${tableHTML([{label:'নাম', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.equity||[])}
+        <p>চলতি মুনাফা: ৳${money(r.retained_earnings)}</p>
+        <p style="text-align:right; font-weight:800;">মোট স্বত্ব: ৳${money(r.total_equity)}</p>
+      </div>
+    </div>`;
+}
+
+/* ================= রিপোর্ট: বিক্রয় / ক্রয় / স্টক ================= */
+async function loadRepSales(root){
+  root.innerHTML = `<div class="card"><h2>🧾 বিক্রয় রিপোর্ট</h2>
+    <div class="row2"><div class="field"><label>থেকে</label><input id="rs_from" type="date"></div><div class="field"><label>পর্যন্ত</label><input id="rs_to" type="date"></div></div>
+    <button class="btn ghost sm" onclick="runRepSales()">রিপোর্ট দেখুন</button>
+    <div id="rsResult" style="margin-top:14px;"></div></div>`;
+  runRepSales();
+}
+async function runRepSales(){
+  const r = await api('accSalesReport', {from:document.getElementById('rs_from').value, to:document.getElementById('rs_to').value});
+  document.getElementById('rsResult').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">মোট বিক্রয়</div><div class="val">৳${money(r.total_amount)}</div></div>
+      <div class="stat"><div class="lbl">পরিশোধিত</div><div class="val">৳${money(r.total_paid)}</div></div>
+      <div class="stat warn"><div class="lbl">বাকি</div><div class="val">৳${money(r.total_due)}</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">পণ্যের ক্রয়মূল্য (COGS)</div><div class="val">৳${money(r.total_cogs)}</div></div>
+      <div class="stat ok"><div class="lbl">গ্রস মুনাফা (Gross Profit)</div><div class="val">৳${money(r.total_gross_profit)}</div></div>
+    </div>
+    <h3 style="color:var(--forest); margin:10px 0;">পণ্যভিত্তিক বিক্রয় ও মুনাফা</h3>
+    ${tableHTML([
+      {label:'পণ্য', key:'name'},{label:'পরিমাণ', key:'qty'},{label:'বিক্রয়', render:x=>'৳'+money(x.amount)},
+      {label:'COGS', render:x=>'৳'+money(x.cogs)},{label:'গ্রস মুনাফা', render:x=>'৳'+money(x.gross_profit)}
+    ], r.by_product||[])}
+    <h3 style="color:var(--forest); margin:10px 0;">ইনভয়েসভিত্তিক তালিকা</h3>
+    ${tableHTML([
+      {label:'ইনভয়েস', key:'invoice_no'},{label:'তারিখ', key:'date'},{label:'গ্রাহক', key:'customer_name'},
+      {label:'মোট', render:x=>'৳'+money(x.total)},{label:'COGS', render:x=>'৳'+money(x.cogs)},
+      {label:'গ্রস মুনাফা', render:x=>'৳'+money(x.gross_profit)}
+    ], r.sales||[])}`;
+}
+async function loadRepPurchase(root){
+  root.innerHTML = `<div class="card"><h2>🛒 ক্রয় রিপোর্ট</h2>
+    <div class="row2"><div class="field"><label>থেকে</label><input id="rp_from" type="date"></div><div class="field"><label>পর্যন্ত</label><input id="rp_to" type="date"></div></div>
+    <button class="btn ghost sm" onclick="runRepPurchase()">রিপোর্ট দেখুন</button>
+    <div id="rpResult" style="margin-top:14px;"></div></div>`;
+  runRepPurchase();
+}
+async function runRepPurchase(){
+  const r = await api('accPurchaseReport', {from:document.getElementById('rp_from').value, to:document.getElementById('rp_to').value});
+  document.getElementById('rpResult').innerHTML = `<div class="stat-grid">
+    <div class="stat"><div class="lbl">মোট ক্রয়</div><div class="val">৳${money(r.total_amount)}</div></div>
+    <div class="stat"><div class="lbl">পরিশোধিত</div><div class="val">৳${money(r.total_paid)}</div></div>
+    <div class="stat warn"><div class="lbl">বাকি</div><div class="val">৳${money(r.total_due)}</div></div>
+  </div>`;
+}
+async function loadRepStock(root){
+  const r = await api('accStockReport', {});
+  root.innerHTML = `<div class="card"><h2>📦 স্টক রিপোর্ট</h2>
+    <p class="muted">মোট স্টক মূল্য: ৳${money(r.total_stock_value)}</p>
+    ${tableHTML([
+      {label:'পণ্য', key:'name'}, {label:'ক্যাটাগরি', key:'category'}, {label:'স্টক', render:p=>p.current_stock+' '+esc(p.unit)},
+      {label:'স্টক মূল্য', render:p=>'৳'+money(p.stock_value)}, {label:'অবস্থা', render:p=>p.low_stock?'<span class="tag warn">⚠ কম স্টক</span>':'<span class="tag ok">ঠিক আছে</span>'}
+    ], r.products||[])}
+    </div>`;
+}
+
+/* ================= সেটিংস ================= */
+async function loadSettings(root){
+  const r = await api('accGetSettings', {});
+  const listsRes = await api('accGetLists', {});
+  const s = r.settings, lists = listsRes.lists;
+  root.innerHTML = `<div class="card"><h2>⚙️ দোকানের তথ্য</h2>
+    <div class="row2">
+      <div class="field"><label>দোকানের নাম (বাংলা)</label><input id="st_name_bn" value="${esc(s.shop_name_bn)}"></div>
+      <div class="field"><label>নাম (English)</label><input id="st_name_en" value="${esc(s.shop_name_en)}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ফোন</label><input id="st_phone" value="${esc(s.phone)}"></div>
+      <div class="field"><label>ইমেইল</label><input id="st_email" value="${esc(s.email)}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ফেসবুক (যেমন: facebook.com/methomart)</label><input id="st_fb" value="${esc(s.fb||'')}"></div>
+      <div class="field"><label>ওয়েবসাইট</label><input id="st_website" value="${esc(s.website||'')}"></div>
+    </div>
+    <div class="field"><label>ঠিকানা</label><input id="st_address" value="${esc(s.address)}"></div>
+    <div class="row2">
+      <div class="field"><label>ব্যাংক হিসাবের নাম</label><input id="st_bank_name" value="${esc(s.bank_name)}"></div>
+      <div class="field"><label>ব্যাংক প্রারম্ভিক ব্যালেন্স</label><input id="st_bank_opening" type="number" value="${s.bank_opening||0}"></div>
+    </div>
+    <div class="field"><label>নগদ প্রারম্ভিক ব্যালেন্স</label><input id="st_cash_opening" type="number" value="${s.cash_opening||0}"></div>
+    <button class="btn gold" onclick="saveSettingsForm()">সংরক্ষণ করুন</button>
+  </div>
+  <div class="card"><h2>🧾 ইনভয়েস কাস্টমাইজেশন</h2>
+    <div class="row2">
+      <div class="field"><label>লোগো URL (ঐচ্ছিক — খালি রাখলে মেথোমার্টের ডিফল্ট লোগো বসবে)</label><input id="st_inv_logo" placeholder="https://..." value="${esc(s.invoice_logo_url||'')}"></div>
+      <div class="field"><label>থিম কালার</label><input id="st_inv_color" type="color" value="${esc(s.invoice_color||'#1F5F3F')}" style="height:42px; padding:4px;"></div>
+    </div>
+    <div class="field"><label>ইনভয়েস টেমপ্লেট</label>
+      <select id="st_inv_template">
+        <option value="classic" ${s.invoice_template==='classic'?'selected':''}>ক্লাসিক (মেমো স্টাইল)</option>
+        <option value="modern" ${s.invoice_template==='modern'?'selected':''}>মডার্ন (রঙিন হেডার)</option>
+        <option value="minimal" ${s.invoice_template==='minimal'?'selected':''}>মিনিমাল (হালকা বর্ডার)</option>
+      </select>
+    </div>
+    <div class="field"><label>ফুটার নোট (যেমন: ধন্যবাদ বার্তা)</label><input id="st_inv_footer" value="${esc(s.invoice_footer_note||'')}"></div>
+    <div class="field"><label>শর্তাবলী / নোট (ঐচ্ছিক, একাধিক লাইন)</label><textarea id="st_inv_terms" rows="3" style="width:100%; padding:9px 11px; border:1.5px solid var(--line); border-radius:9px; font-family:inherit;">${esc(s.invoice_terms||'')}</textarea></div>
+    <div class="row2">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:600;"><input id="st_inv_signature" type="checkbox" ${s.invoice_show_signature!==false?'checked':''} style="width:auto;"> স্বাক্ষরের ঘর দেখান</label>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:600;"><input id="st_inv_words" type="checkbox" ${s.invoice_show_words!==false?'checked':''} style="width:auto;"> মোট টাকা কথায় দেখান</label>
+    </div>
+    <button class="btn gold" style="margin-top:10px;" onclick="saveSettingsForm()">সংরক্ষণ করুন</button>
+    <p class="muted" style="margin-top:8px;">পরিবর্তন সেভ করার পর যেকোনো ইনভয়েস 🖨️ করে দেখে নিতে পারেন।</p>
+  </div>
+  <div class="card"><h2>খরচের খাত তালিকা</h2>
+    <div id="expHeadList">${lists.expense_head.map(h=>`<span class="tag mid" style="margin:3px;">${esc(h)} <a href="#" onclick="delListItem('expense_head','${esc(h)}');return false;" style="color:var(--danger);">✕</a></span>`).join('')}</div>
+    <div class="row2" style="margin-top:10px;"><input id="newExpHead" placeholder="নতুন খাত"> <button class="btn ghost" onclick="addListItem('expense_head')">+ যোগ করুন</button></div>
+  </div>
+  <div class="card"><h2>পেমেন্ট মাধ্যম তালিকা</h2>
+    <div id="pmList">${lists.payment_method.map(h=>`<span class="tag mid" style="margin:3px;">${esc(h)} <a href="#" onclick="delListItem('payment_method','${esc(h)}');return false;" style="color:var(--danger);">✕</a></span>`).join('')}</div>
+    <div class="row2" style="margin-top:10px;"><input id="newPm" placeholder="নতুন মাধ্যম"> <button class="btn ghost" onclick="addListItem('payment_method')">+ যোগ করুন</button></div>
+  </div>`;
+}
+async function saveSettingsForm(){
+  const settings = {
+    shop_name_bn: document.getElementById('st_name_bn').value, shop_name_en: document.getElementById('st_name_en').value,
+    phone: document.getElementById('st_phone').value, email: document.getElementById('st_email').value,
+    fb: document.getElementById('st_fb').value.trim(), website: document.getElementById('st_website').value.trim(),
+    address: document.getElementById('st_address').value, bank_name: document.getElementById('st_bank_name').value,
+    bank_opening: Number(document.getElementById('st_bank_opening').value)||0, cash_opening: Number(document.getElementById('st_cash_opening').value)||0,
+    invoice_logo_url: document.getElementById('st_inv_logo').value.trim(), invoice_color: document.getElementById('st_inv_color').value,
+    invoice_template: document.getElementById('st_inv_template').value, invoice_footer_note: document.getElementById('st_inv_footer').value.trim(),
+    invoice_terms: document.getElementById('st_inv_terms').value.trim(),
+    invoice_show_signature: document.getElementById('st_inv_signature').checked, invoice_show_words: document.getElementById('st_inv_words').checked
+  };
+  const r = await api('accSaveSettings', {settings});
+  if(r.ok) toast('সংরক্ষিত হয়েছে'); else toast(r.error);
+}
+async function addListItem(type){
+  const inputId = type==='expense_head'?'newExpHead':'newPm';
+  const value=document.getElementById(inputId).value.trim();
+  if(!value) return;
+  const r=await api('accAddListItem',{type,value});
+  if(r.ok){ toast('যোগ হয়েছে'); loadTab('settings'); } else toast(r.error);
+}
+async function delListItem(type,value){
+  const r=await api('accDeleteListItem',{type,value});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('settings'); } else toast(r.error);
+}
+
+/* ================= ট্যাব ম্যাপ ================= */
+const TAB_LOADERS = {
+  'dashboard': loadDashboard,
+  'sale-new': loadSaleNew, 'sale-list': loadSaleList, 'sale-return': loadSaleReturn,
+  'purchase-new': loadPurchaseNew, 'purchase-list': loadPurchaseList, 'purchase-return': loadPurchaseReturn,
+  'customers': loadCustomers, 'suppliers': loadSuppliers, 'products': loadProducts, 'inventory': loadInventory,
+  'expenses': loadExpenses, 'cashbank': loadCashBank,
+  'coa': loadCOA, 'journal': loadJournal, 'ledger': loadLedger, 'trialbalance': loadTrialBalance,
+  'rep-pl': loadRepPL, 'rep-bs': loadRepBS, 'rep-sales': loadRepSales, 'rep-purchase': loadRepPurchase, 'rep-stock': loadRepStock,
+  'settings': loadSettings
+};
+
+/* boot() ব্যবহার করে dashboard/অন্য ট্যাব লোড করে, তাই এটা অবশ্যই TAB_LOADERS
+   ডিফাইন হওয়ার পরে কল করতে হবে — আগে কল করলে প্রথমবার পেজ খোলার সময়
+   "TAB_LOADERS is not defined" এরর হয়ে ড্যাশবোর্ডের ডাটা লোড হতো না
+   (ট্যাবে ক্লিক করলে তখন কাজ করত, কারণ ততক্ষণে পুরো স্ক্রিপ্ট লোড হয়ে যেত)। */
+boot();
+</script>
+</body>
+</html>
