@@ -1,0 +1,2887 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>হিসাব সফটওয়্যার — MethoMart</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;600;700;800&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --forest:#1F3D2B; --forest-dark:#152A1D; --gold:#D4A017; --gold-light:#E8C158;
+    --ivory:#FBF6EC; --card:#F3ECDA; --maroon:#7A3B2E; --charcoal:#2B2B25;
+    --muted:#6B6B5D; --line:#DFD5B8; --radius:14px; --danger:#B23A3A; --ok:#2F7A4A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Noto Serif Bengali', serif; background:var(--ivory); color:var(--charcoal); line-height:1.6;}
+  h1,h2,h3,.brand{font-family:'Baloo Da 2', sans-serif;}
+  button, input, select, textarea{font-family:inherit; font-size:.95rem;}
+  a{color:inherit;}
+  header{background:var(--forest); color:var(--ivory); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 12px rgba(0,0,0,.15); position:sticky; top:0; z-index:50;}
+  header .brand{font-size:1.2rem; font-weight:800; color:var(--gold); display:flex; align-items:center; gap:10px;}
+  header .brand span{color:var(--ivory); font-size:.85rem; font-weight:600;}
+  header a.back{color:var(--gold-light); text-decoration:none; border:1.5px solid var(--gold); padding:6px 14px; border-radius:999px; font-weight:600; font-size:.85rem;}
+  #sidebarToggle{display:none; background:none; border:1.5px solid var(--gold); color:var(--gold-light); width:36px; height:36px; border-radius:10px; cursor:pointer; font-size:1.1rem;}
+
+  .shell{display:flex; align-items:flex-start;}
+  .sidebar{width:240px; flex-shrink:0; background:var(--card); border-right:1px solid var(--line); min-height:calc(100vh - 61px); padding:12px 9px; position:sticky; top:61px; overflow-y:auto; max-height:calc(100vh - 61px);}
+  .sidebar::-webkit-scrollbar{width:6px;}
+  .sidebar::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+  .sidebar > .tab-btn.top{margin-bottom:8px; box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .sidebar .grp{margin-bottom:6px; border-radius:11px; overflow:hidden; background:rgba(255,255,255,.35); border:1px solid rgba(223,213,184,.6);}
+  .sidebar .grp-title{display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:.74rem; color:var(--forest-dark); text-transform:uppercase; letter-spacing:.03em; font-weight:800; margin:0; padding:9px 10px; cursor:pointer; user-select:none; transition:background .15s;}
+  .sidebar .grp-title:hover{background:rgba(212,160,23,.12);}
+  .sidebar .grp-title .ic{font-size:.95rem; text-transform:none; margin-right:2px;}
+  .sidebar .grp-title .chev{font-size:.75rem; color:var(--gold); transition:transform .2s ease; flex-shrink:0;}
+  .sidebar .grp.open .grp-title{background:rgba(212,160,23,.16);}
+  .sidebar .grp.open .grp-title .chev{transform:rotate(90deg);}
+  .sidebar .grp-body{display:none; padding:2px 6px 6px;}
+  .sidebar .grp.open .grp-body{display:block; animation:grpOpen .15s ease;}
+  @keyframes grpOpen{from{opacity:0; transform:translateY(-3px);} to{opacity:1; transform:translateY(0);}}
+  .sidebar .tab-btn{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:none; color:var(--forest-dark); padding:8px 11px; border-radius:8px; font-weight:700; cursor:pointer; margin-bottom:2px; font-size:.85rem; transition:background .12s, transform .12s;}
+  .sidebar .tab-btn:hover{background:#EFE6CC;}
+  .sidebar .tab-btn:active{transform:scale(.98);}
+  .sidebar .tab-btn.active{background:var(--forest); color:var(--ivory); box-shadow:0 2px 6px rgba(31,61,43,.35);}
+  .main{flex:1; min-width:0; padding:18px;}
+  .wrap{max-width:1200px; margin:0 auto;}
+
+  @media (max-width:900px){
+    #sidebarToggle{display:block;}
+    .sidebar{position:fixed; left:0; top:61px; bottom:0; z-index:60; transform:translateX(-100%); transition:.2s; box-shadow:6px 0 20px rgba(0,0,0,.2);}
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-overlay{display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:55;}
+    .sidebar-overlay.show{display:block;}
+  }
+
+  .card{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:18px; margin-bottom:16px;}
+  .card h2{color:var(--forest); font-size:1.15rem; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:16px;}
+  .stat{background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
+  .stat .lbl{font-size:.78rem; color:var(--muted); font-weight:600;}
+  .stat .val{font-size:1.35rem; font-weight:800; color:var(--forest); margin-top:2px;}
+  .stat.warn .val{color:var(--danger);}
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--forest); color:var(--ivory); border:none; padding:9px 16px; border-radius:9px; font-weight:700; cursor:pointer;}
+  .btn:disabled{opacity:.55; cursor:not-allowed;}
+  .btn:hover{background:var(--forest-dark);}
+  .btn.gold{background:var(--gold); color:var(--forest-dark);}
+  .btn.gold:hover{background:var(--gold-light);}
+  .btn.danger{background:var(--danger); color:#fff;}
+  .btn.ghost{background:none; border:1.5px solid var(--line); color:var(--charcoal);}
+  .btn.sm{padding:5px 11px; font-size:.8rem;}
+
+  table{width:100%; border-collapse:collapse; font-size:.88rem;}
+  th,td{padding:8px 10px; border-bottom:1px solid var(--line); text-align:left; white-space:nowrap;}
+  th{color:var(--forest); font-weight:700; background:#F8F3E4;}
+  .tbl-wrap{overflow-x:auto;}
+  tr:hover td{background:#FCFAF2;}
+  .tag{display:inline-block; padding:3px 9px; border-radius:999px; font-size:.75rem; font-weight:700;}
+  .tag.ok{background:#E4F2E7; color:var(--ok);}
+  .tag.warn{background:#FDECEC; color:var(--danger);}
+  .tag.mid{background:#FFF3D6; color:#8A6410;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-weight:700; margin-bottom:5px; font-size:.85rem; color:var(--forest-dark);}
+  .field input, .field select, .field textarea{width:100%; padding:9px 11px; border:1.5px solid var(--line); border-radius:9px; background:#fff; color:var(--charcoal);}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:none; border-color:var(--gold);}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;}
+  @media (max-width:640px){.row2,.row3{grid-template-columns:1fr;}}
+
+  .item-row{display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center;}
+  @media (max-width:640px){.item-row{grid-template-columns:1fr 1fr; }}
+  .item-row.no-unit{grid-template-columns:2fr 1fr 1fr 1fr auto;}
+  @media (max-width:640px){.item-row.no-unit{grid-template-columns:1fr 1fr; }}
+
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:flex-start; justify-content:center; padding:30px 12px; overflow-y:auto;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff; border-radius:var(--radius); max-width:640px; width:100%; padding:22px; position:relative;}
+  .modal.wide{max-width:900px;}
+  .modal .x{position:absolute; top:14px; right:16px; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--muted);}
+  .toast{position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:var(--forest); color:var(--ivory); padding:11px 22px; border-radius:999px; font-weight:700; z-index:400; display:none; box-shadow:0 6px 20px rgba(0,0,0,.25);}
+
+  /* ----- লগইন সাকসেস অ্যানিমেশন ----- */
+  .success-overlay{position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:rgba(21,42,29,.45); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:opacity .25s ease;}
+  .success-overlay.show{opacity:1; pointer-events:auto;}
+  .success-card{background:linear-gradient(160deg, var(--ivory), var(--card)); border:1px solid var(--gold-light); border-radius:20px; padding:34px 42px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.3); transform:scale(.75) translateY(10px); opacity:0; transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;}
+  .success-overlay.show .success-card{transform:scale(1) translateY(0); opacity:1;}
+  .success-ring{width:74px; height:74px; margin:0 auto 16px; border-radius:50%; background:var(--forest); display:flex; align-items:center; justify-content:center;}
+  .success-overlay.show .success-ring{animation:successPulse .7s ease-out .15s;}
+  .success-ring svg{width:36px; height:36px;}
+  .success-ring svg path{fill:none; stroke:var(--gold-light); stroke-width:4; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:40; stroke-dashoffset:40;}
+  .success-overlay.show .success-ring svg path{animation:successCheck .45s ease .3s forwards;}
+  .success-card h3{color:var(--forest); font-size:1.25rem; margin-bottom:4px;}
+  .success-card p{color:var(--muted); font-size:.88rem;}
+  @keyframes successPulse{
+    0%{box-shadow:0 0 0 0 rgba(212,160,23,.55);}
+    100%{box-shadow:0 0 0 22px rgba(212,160,23,0);}
+  }
+  @keyframes successCheck{ to{ stroke-dashoffset:0; } }
+  .empty{text-align:center; padding:30px; color:var(--muted);}
+
+  /* ----- ড্যাশবোর্ড লোড হওয়ার সময় "স্বাগতম" পপআপ ----- */
+  .welcome-overlay{position:fixed; inset:0; z-index:600; display:flex; align-items:center; justify-content:center; background:rgba(21,42,29,.55); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:opacity .25s ease; padding:16px;}
+  .welcome-overlay.show{opacity:1; pointer-events:auto;}
+  .welcome-card{background:linear-gradient(160deg, var(--ivory), var(--card)); border:1px solid var(--gold-light); border-radius:20px; padding:34px 30px; max-width:380px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.3); transform:scale(.85) translateY(10px); opacity:0; transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;}
+  .welcome-overlay.show .welcome-card{transform:scale(1) translateY(0); opacity:1;}
+  .welcome-icon{width:66px; height:66px; margin:0 auto 14px; border-radius:20px; background:linear-gradient(160deg, #D4A017, #E8C158); display:flex; align-items:center; justify-content:center; font-size:2rem; box-shadow:0 8px 26px rgba(0,0,0,.25);}
+  .welcome-card p{color:var(--charcoal); font-size:1.02rem; line-height:1.8;}
+  .welcome-card button{margin-top:20px;}
+  /* ----- ট্যাব লোডিং স্পিনার ----- */
+  .tab-loading{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:60px 20px; color:var(--muted);}
+  .tab-loading .spin{width:38px; height:38px; border-radius:50%; border:3.5px solid var(--line); border-top-color:var(--gold); animation:tabSpin .7s linear infinite;}
+  .tab-loading .txt{font-size:.9rem; font-weight:600;}
+  @keyframes tabSpin{ to{ transform:rotate(360deg); } }
+  .search-bar{display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap;}
+  .search-bar input, .search-bar select{padding:9px 11px; border:1.5px solid var(--line); border-radius:9px;}
+  .muted{color:var(--muted); font-size:.85rem;}
+  .totals-box{margin-top:10px; background:#F8F3E4; border-radius:10px; padding:12px 16px; max-width:320px; margin-left:auto;}
+  .totals-box .tr{display:flex; justify-content:space-between; padding:4px 0; font-weight:600;}
+  .totals-box .tr.grand{font-size:1.15rem; color:var(--forest); font-weight:800; border-top:1px solid var(--line); margin-top:4px; padding-top:8px;}
+
+  /* ---- ইনভয়েস প্রিন্ট (মেঠোমার্ট ক্যাশ মেমো — হুবহু রেফারেন্স লেআউট) ---- */
+  #invoicePrint{display:none;}
+  .inv-box{--inv-color:#1F5F3F; width:720px; max-width:100%; margin:0 auto; padding:18px; font-family:'Noto Serif Bengali',serif; color:#000; background:#fff; font-size:.86rem; position:relative; z-index:0; overflow:hidden;}
+  /* watermark এখন পুরো ইনভয়েস পেজের ঠিক মাঝখানে (ওপর-নিচ, ডান-বাম সব মিলিয়ে) বসে,
+     .inv-box-এর সরাসরি সন্তান হিসেবে, যাতে টেবিলের কলাম নয় বরং পুরো কাগজের কেন্দ্রে থাকে।
+     z-index:-1 দিয়ে বাকি সব কনটেন্টের নিচে (পেছনে) রাখা হচ্ছে। */
+  .inv-watermark{position:absolute; top:50%; left:50%; width:300px; max-width:75%; transform:translate(-50%,-50%); opacity:.12; z-index:-1; pointer-events:none; object-fit:contain;}
+  /* watermark সরাসরি আইটেম টেবিলের "বিবরণ" কলামের পেছনে বসানো হচ্ছে (পুরো ইনভয়েসের মাঝখানে নয়) —
+     যাতে টেবিলের উপরে/নিচে যত সেকশনই (দোকানের হেডার, মেটা তথ্য, টোটাল, কুরিয়ার, শর্তাবলি ইত্যাদি)
+     থাকুক না কেন, watermark সবসময় বিবরণ কলামেই দেখা যায়। <img> ট্যাগ ব্যবহার করা হচ্ছে
+     (background-image নয়), কারণ কিছু ব্রাউজারে/ডিভাইসে "Background graphics" প্রিন্ট-সেটিং অফ
+     থাকলে background-image প্রিন্ট হয় না, কিন্তু <img> সবসময় প্রিন্ট হয়। */
+  .inv-tbl-wrap{position:relative;}
+  .inv-tbl-wrap > table{position:relative; z-index:1;}
+
+  /* হেডার: বাঁয়ে লোগো+দোকানের নাম, ডানে CASH MEMO বক্স + যোগাযোগ লিংক */
+  .inv-head2{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;}
+  .inv-head-left{display:flex; align-items:flex-start; gap:8px;}
+  .inv-logo2{width:48px; height:48px; object-fit:contain; flex-shrink:0;}
+  .inv-shop-bn{font-size:1.25rem; font-weight:800; color:var(--inv-color);}
+  .inv-shop-en{font-size:.82rem; font-style:italic; color:#333;}
+  .inv-shop-line{font-size:.78rem; color:#333;}
+  .inv-head-right{text-align:right;}
+  .cash-memo-box{display:inline-block; border:1.5px solid #000; padding:3px 10px; font-weight:800; font-size:.85rem; letter-spacing:.5px; margin-bottom:4px;}
+  .inv-contact-line{font-size:.76rem; color:#1a5fb4; line-height:1.5;}
+
+  /* নাম/ঠিকানা/মোবা (বামে) ও চালান নং/তারিখ (ডানে, শেষ প্রান্তে) */
+  .inv-meta-flex{display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:10px;}
+  table.inv-meta-left{border-collapse:collapse;}
+  table.inv-meta-left td{padding:3px 4px; font-size:.9rem; vertical-align:top;}
+  table.inv-meta-left td.lbl{font-weight:700; white-space:nowrap; width:1%;}
+  table.inv-meta-left td.val{border-bottom:1px dotted #999; min-width:140px;}
+  .inv-meta-right{text-align:right; white-space:nowrap; flex-shrink:0;}
+  .inv-meta-right .row{margin-bottom:6px; font-size:.9rem;}
+  .inv-meta-right .lbl{font-weight:700;}
+  .inv-meta-right .val{font-weight:700; background:#FCEFC7; padding:3px 8px; margin-left:6px; display:inline-block;}
+
+  /* আইটেম টেবিল — শুধু যতগুলো পণ্য ততগুলো সারি, বিবরণ কলাম হলুদ, একক কলাম সবুজ */
+  table.inv-tbl{width:100%; border-collapse:collapse; margin-bottom:8px;}
+  table.inv-tbl th, table.inv-tbl td{border:1px solid #000; padding:4px 7px; font-size:.85rem;}
+  table.inv-tbl th{background:#EDEDED; text-align:center; font-weight:700;}
+  table.inv-tbl td.c-no{text-align:center; width:32px;}
+  table.inv-tbl td.c-desc{background:transparent !important;}
+  table.inv-tbl td.c-qty{text-align:center; width:60px;}
+  table.inv-tbl td.c-unit{background:transparent !important; text-align:center; width:70px;}
+  table.inv-tbl td.c-price{text-align:right; width:70px;}
+  table.inv-tbl td.c-amt{text-align:right; width:90px;}
+
+  /* কথায় (বামে) এবং মোট/পরিশোধ/বাকি (ডানে যতদূর সম্ভব প্রসারিত) একই সারিতে */
+  .inv-summary-flex{display:flex; align-items:flex-start; gap:14px; margin:2px 0 8px;}
+  .inv-words{font-size:.85rem; flex:1 1 auto; max-width:42%;}
+  .inv-totals{border-collapse:collapse; margin-left:auto; width:300px; max-width:60%;}
+  .inv-totals td{padding:4px 10px; font-size:.9rem; border:1px solid #cfcfcf;}
+  .inv-totals tr.grand td{font-weight:800; color:var(--inv-color); font-size:1rem;}
+  .inv-totals tr.grand td:first-child{background:#fff;}
+  .inv-totals tr.grand td:last-child{background:#E1EFE3;}
+  .inv-totals tr.paid td:last-child{background:#FCF6D9;}
+  .inv-totals tr.due td:last-child{background:#F6DADA; font-weight:700;}
+  .inv-totals td:first-child{font-weight:700;}
+  .inv-totals td:last-child{text-align:right;}
+
+  /* Courier / CTN / Fare / COD — টেবিল, চারপাশে বক্স বর্ডার, ভেতরে কোনো দাগ নেই, শুধু লেখা পর্যন্ত ছোট */
+  table.inv-courier{width:auto; border-collapse:collapse; margin-top:8px; font-size:.85rem; border:1px solid #000;}
+  table.inv-courier td{padding:3px 12px; border:none !important; font-weight:700; white-space:nowrap;}
+
+  .inv-terms{font-size:.78rem; color:#333; margin-top:10px; white-space:pre-line; border-top:1px dashed #999; padding-top:6px;}
+  .inv-foot2{display:flex; justify-content:space-between; align-items:flex-end; margin-top:34px; font-size:.85rem;}
+  .inv-footnote{text-align:center; font-size:.85rem; color:var(--inv-color); font-weight:700; margin-top:10px;}
+
+  /* মডার্ন টেমপ্লেট: রঙিন হেডার ব্যান্ড */
+  .inv-box.tpl-modern .inv-head2{border-bottom:none; background:var(--inv-color); color:#fff; padding:14px 10px; border-radius:8px 8px 0 0; margin:-18px -18px 12px -18px;}
+  .inv-box.tpl-modern .inv-shop-bn, .inv-box.tpl-modern .inv-shop-en, .inv-box.tpl-modern .inv-shop-line{color:#fff;}
+  .inv-box.tpl-modern .inv-contact-line{color:#fff;}
+  .inv-box.tpl-modern table.inv-tbl th{background:var(--inv-color); color:#fff;}
+  /* মিনিমাল টেমপ্লেট: হালকা বর্ডার, কম কালার */
+  .inv-box.tpl-minimal .inv-head2{border-bottom:1px solid #ccc;}
+  .inv-box.tpl-minimal table.inv-tbl th, .inv-box.tpl-minimal table.inv-tbl td{border:none; border-bottom:1px solid #ddd;}
+  .inv-box.tpl-minimal table.inv-tbl th{background:#fff; border-bottom:2px solid var(--inv-color);}
+  .inv-box.tpl-minimal td.c-desc, .inv-box.tpl-minimal td.c-unit{background:none;}
+  /* রিপোর্ট/লেজার হেডার (লোগো + প্রতিষ্ঠানের নাম) — PDF/প্রিন্টে সবার উপরে দেখানোর জন্য */
+  .report-header{display:flex; align-items:center; gap:10px; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:14px;}
+  .report-header img{width:46px; height:46px; object-fit:contain; flex-shrink:0;}
+  .report-header .rh-bn{font-size:1.15rem; font-weight:800; color:var(--forest);}
+  .report-header .rh-en{font-size:.78rem; font-style:italic; color:#333;}
+  .report-header .rh-line{font-size:.75rem; color:#333;}
+  @media print{
+    html, body{background:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    body:not(.print-report) *{visibility:hidden;}
+    body:not(.print-report) #invoicePrint, body:not(.print-report) #invoicePrint *{visibility:visible;}
+    body:not(.print-report) #invoicePrint{display:block; position:absolute; top:0; left:0; width:100%; background:#fff;}
+    body.print-report header, body.print-report .sidebar, body.print-report .btn, body.print-report #modalBg, body.print-report #toast{display:none !important;}
+    body.print-report .main{margin:0 !important; padding:0 !important;}
+    body.print-report .wrap{max-width:100% !important; padding:0 !important;}
+    /* লেজার/রিপোর্ট PDF-এ ফিল্টার ফর্ম (ধরন/সার্চ/তারিখ) প্রিন্ট হবে না, যাতে প্রতিষ্ঠানের
+       লোগো ও নাম (report-header) পাতার সবার প্রথমে দেখা যায় */
+    body.print-report #plFilterCard{display:none !important;}
+    body.print-report .card{border:none !important; padding:0 !important; margin:0 !important;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="sidebarToggle">☰</button>
+  <div class="brand">🧮 <span>হিসাব সফটওয়্যার — MethoMart</span></div>
+  <a class="back" href="admin.html">⟵ এডমিন প্যানেল</a>
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ===== লগইন স্ক্রিন (আলাদাভাবে খুললে) ===== -->
+<div id="loginScreen" style="display:none; min-height:70vh; align-items:center; justify-content:center; padding:30px;">
+  <div style="max-width:360px; margin:60px auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:30px;">
+    <h1 style="color:var(--forest); text-align:center; margin-bottom:16px;">এডমিন লগইন</h1>
+    <div class="field"><label>ইউজারনেম</label><input id="loginUser"></div>
+    <div class="field"><label>পাসওয়ার্ড</label><input id="loginPass" type="password"></div>
+    <button class="btn gold" style="width:100%;" onclick="doLogin()">লগইন</button>
+    <p class="muted" id="loginErr" style="margin-top:10px; color:var(--danger);"></p>
+  </div>
+</div>
+
+<div class="shell" id="appShell" style="display:none;">
+  <nav class="sidebar" id="sidebarNav">
+    <div id="loggedInAs" style="display:flex; align-items:center; gap:8px; padding:8px 11px; margin-bottom:8px; border-bottom:1px solid var(--line); color:var(--forest-dark); font-weight:700; font-size:.85rem;">👤 <span id="loggedInAsName"></span></div>
+    <button class="tab-btn top active" data-tab="dashboard">📊 ড্যাশবোর্ড</button>
+
+    <div class="grp" data-grp="sales">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">🧾</span>বিক্রয় (Sales)</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="sale-new">🧾 নতুন বিক্রয়</button>
+        <button class="tab-btn" data-tab="sale-list">📋 বিক্রয় তালিকা</button>
+        <button class="tab-btn" data-tab="sale-return">↩️ বিক্রয় ফেরত</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="purchase">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">🛒</span>ক্রয় (Purchase)</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="purchase-new">🛒 নতুন ক্রয়</button>
+        <button class="tab-btn" data-tab="purchase-list">📋 ক্রয় তালিকা</button>
+        <button class="tab-btn" data-tab="purchase-return">↩️ ক্রয় ফেরত</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="collections">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">💵</span>পাওনা-দেনা</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="customer-collection">💵 গ্রাহক থেকে আদায়</button>
+        <button class="tab-btn" data-tab="supplier-payment">💵 সরবরাহকারীকে প্রদান</button>
+        <button class="tab-btn" data-tab="party-ledger">📖 গ্রাহক/সরবরাহকারী লেজার</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="lists">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">🗂️</span>তালিকা</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="customers">👥 গ্রাহক</button>
+        <button class="tab-btn" data-tab="suppliers">🚚 সরবরাহকারী</button>
+        <button class="tab-btn" data-tab="products">📦 পণ্য</button>
+        <button class="tab-btn" data-tab="inventory">🏬 ইনভেন্টরি</button>
+        <button class="tab-btn" data-tab="expenses">💸 খরচ</button>
+        <button class="tab-btn" data-tab="cashbank">🏦 ক্যাশ ও ব্যাংক</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="closing">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">🔒</span>ক্যাশ ক্লোজিং</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="day-closing">🧮 দিন ক্লোজিং (Cash Denomination)</button>
+        <button class="tab-btn" data-tab="month-closing">📅 মাস ক্লোজিং</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="assets">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">🏗️</span>সম্পদ ব্যবস্থাপনা</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="fixed-assets">🏗️ স্থায়ী সম্পদ</button>
+        <button class="tab-btn" data-tab="depreciation">📉 অবচয় (Depreciation)</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="staff">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">👤</span>স্টাফ</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="employees">👤 কর্মচারী</button>
+        <button class="tab-btn" data-tab="attendance">🗓️ উপস্থিতি</button>
+        <button class="tab-btn" data-tab="payroll">💰 পেরোল</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="accounts">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">📚</span>Accounts</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="coa">📚 চার্ট অব অ্যাকাউন্টস</button>
+        <button class="tab-btn" data-tab="journal">📝 জার্নাল</button>
+        <button class="tab-btn" data-tab="ledger">📖 লেজার</button>
+        <button class="tab-btn" data-tab="trialbalance">⚖️ ট্রায়াল ব্যালেন্স</button>
+        <button class="tab-btn" data-tab="partners">🤝 মালিক/পার্টনার ক্যাপিটাল</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="reports">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">📈</span>Reports</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="rep-pl">📈 লাভ-ক্ষতি</button>
+        <button class="tab-btn" data-tab="rep-bs">🏛️ ব্যালেন্স শীট</button>
+        <button class="tab-btn" data-tab="rep-sales">🧾 বিক্রয় রিপোর্ট (প্রফিট মার্জিন সহ)</button>
+        <button class="tab-btn" data-tab="rep-purchase">🛒 ক্রয় রিপোর্ট</button>
+        <button class="tab-btn" data-tab="rep-stock">📦 স্টক রিপোর্ট</button>
+        <button class="tab-btn" data-tab="due-aging">⏳ বাকি এজিং রিপোর্ট</button>
+      </div>
+    </div>
+
+    <div class="grp" data-grp="other">
+      <div class="grp-title" onclick="toggleGrp(this)"><span><span class="ic">⚙️</span>অন্যান্য</span><span class="chev">›</span></div>
+      <div class="grp-body">
+        <button class="tab-btn" data-tab="activity-log">🕒 এক্টিভিটি লগ</button>
+        <button class="tab-btn" data-tab="settings">⚙️ সেটিংস</button>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--line); margin:10px 4px 6px;"></div>
+    <button class="tab-btn top" id="sidebarLogoutBtn" style="color:var(--danger);">🚪 লগ আউট</button>
+  </nav>
+
+  <div class="main"><div class="wrap" id="viewRoot">
+    <div class="empty">লোড হচ্ছে…</div>
+  </div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <div class="success-ring">
+      <svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6"/></svg>
+    </div>
+    <h3>লগইন সফল হয়েছে</h3>
+    <p>স্বাগতম, লোড হচ্ছে…</p>
+  </div>
+</div>
+
+<!-- ================= ড্যাশবোর্ড লোড হওয়ার সময় "স্বাগতম" পপআপ ================= -->
+<div class="welcome-overlay" id="welcomeOverlay">
+  <div class="welcome-card">
+    <div class="welcome-icon">🍯</div>
+    <p>আসসালামু আলাইকুম MethoMart এডমিন প্যানেলে আপনাকে স্বাগতম। জাযাকাল্লাহু খাইরান♥</p>
+    <button class="btn gold" id="welcomeOverlayCloseBtn">ঠিক আছে</button>
+  </div>
+</div>
+
+<!-- মডাল কনটেইনার (জেনেরিক) -->
+<div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
+
+<!-- ইনভয়েস প্রিন্ট এরিয়া -->
+<div id="invoicePrint"></div>
+
+<script>
+/* ================= বেসিক সেটআপ ================= */
+// ⚠️ admin.html-এ থাকা একই API_URL/SUPABASE_ANON_KEY এখানে বসান
+const API_URL = 'https://cixjxrvkzdbxgcupuwsn.supabase.co/functions/v1/api';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpeGp4cnZremRieGdjdXB1d3NuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTczMzYsImV4cCI6MjEwMjMzMzMzNn0.z-OeFieochici0eYtOQyW6lf2Q2yg0QPN8axxDng84I';
+
+function getAdminToken(){ return localStorage.getItem('mm_admin_token'); }
+function setAdminToken(t){ localStorage.setItem('mm_admin_token', t); }
+function clearAdminToken(){ localStorage.removeItem('mm_admin_token'); localStorage.removeItem('mm_admin_name'); localStorage.removeItem('mm_admin_is_super'); }
+function isSuperAdmin(){ return localStorage.getItem('mm_admin_is_super') === '1'; }
+
+const DEFAULT_INVOICE_LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcCAMAAAAshD+zAAAA/1BMVEVrmGvI3J3vpA8zjQqgylscZiJloyLhcgLQ2dKFsmyu0aOXrqAIOBr8xRuzcAHnqF6TpAWLwBx6mIRgfWw+cFReeQm928T/uYn6wUz9/f1ipQMDPBsFQB2GuxddogAPRibL2M15tQra5dPl6udVemRniHQmVzt3synR5rNRmgSmua3n8dd5loW515G0xrqNppc2ZUmw1HIFZAdLc1uSxDECWAiUw1CkzHAvXEKFujZGa1WDnI2bsqXl7NCKvEq8ysIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABllNXAAAAAQHRSTlP/////////////////////////////////////////////////////////////////////////////////////73leyQAAEkJJREFUeNrtnQt/ojjXwKGiddruzOzue+NSQO43BYu1Xuv3/1ZvcpJAQLRamdHOQ367taJ28/fkXHPCCvIfPIQOroPr4Dq4Dq6D6+A6uA6ug+vgOrgOroPr4Dq4Dq6D6+A6uA6ug+vgOrgOroP7z4OLA3EqSTMypOlUDOI/Ay4Wpdnz3vh7NhXjLw4XTBvAijGbWl8WLq6T/b3/20z8knCB9HzKGD1Pt18NLphzAMuZJE3HIh7jqTSfzWp40vYrwXFSm0n7pjEOphUjg6T3deCmbNaSuD3N1ox+ke61DhfMmK2Iz1DL0Tz+AnBIbEsstOA0g7os12Zw63AxMiSzU9GqeKPR9LbhyJKUzpJBPC3opFuGE2d/Lz/hl5mWjkbz24UTQWzx5xSV0M3iG4XDbEvxkvWM6W4TTkRWcvbpSDiWfgVdW3DBZ5dksTRH7etdS3AxWlcXmnJGN705uMvZZHlMV2ZwY3DT5zaC3ymBe45vCk58biewn7asdkI7CtdScCGNgE68Ibjpc2vf9WzU5sJsAS54bi+w2ILk2rKYLcBJf7eYrYhE7awbgQvarRJIo/YShMvhpHbjwZgE0dZNwFm1RWmmQrbInNQ852+8Lf2B/z4mCxMspnQTcNPKNCzBUMkwnJPx5oquoBHqfkCjnZYM5qVw8YyvcE0MVVNVTdMAb3Oa2HxAg6GPSQyODOb4BuBEXnC7J0xG/sUjPYVN4UYYisTZtZP7XApXKZgsMBEjwyP6+A/4SoXOJ1o3aiV+vhAu5t3ARq0P40O9m+sVOLIwQXTTq8OJ/Peb1wWnqtlH5kipDX1OUrtW1uWFcBW19wCtAqe6xwMAZQ8Or0sLTMr22nC84GyjMJR04N8fjy1qpWHEsC5HbeQGLZb2LKMmNXh6TO2Wh+BgXUpXgbNM+xAcXpVaVe88+6Cl1Q/BBVhysyvADR1DNTIhMg/AweDl5xzS10Y2gJOXCO75CnAZW28Ld2PuwTE2HjD92HvX4SQsuvi3w+1g4nTmRuZOGuBgbVIFRD+NXaP31o/AjUdtuPGz4aKSjTwuzH3JwQvaUbWb68ckF7RiLs+GG3Jo5Je+WYPjjeUhtRsfYiNwcSux8/k6t2JTJxToZ1bA8Uu2MtIPvXcVDjzd9PfD2a5RyoWgRCWcqjaxqU/Dj733LcAhvMk69wxOeg4P10xXVbt3/SM46VpwtJzgLJiovApcbdBlyqvdVP9Qcm9XhQNAlwrPPAK3r3ZHFK6Am14dTpZTYkA2J8AVQWY8+iJwJIdTkw/gtHLxotBKPw1OEa8Nl4JO5c1ZQWlcQPHcjxWuIrlKhDK/Apxp4Hl7ByRX8ecarF5RUU6Be6vBvYfW74eT+4U+HVyWhVvHbxvrJ8FJlcA5npPiyu+Gy2DakyJCKQ1IEaSRFE+jJZW9klAj3Hw0WpaxGnqTLl0BzgWeNQ9HMoI0I08IHUFUhb1injIIGiOUomZoTSF/0N+vAJcCgsMbFFKWnZhGITqtyIEme27OkpvgYka2ZKL1rwC3U9l6q1nLSH4kpFwepKkGsgtv3ErUkb1vgsN847nPLdprwA3BXBo2KzPw1WaXCrEUnwZeY1mtwTbCjd8VvaKOg2tUvxaQd+8KyTHACKxNScZSPRSGbQs2sBK8ddHf8JXt256d0a8hOdkBS/hYJKsqrctG4AU5tWMLs/QHITGIvOWEqGQf7VpwCcC5fCZewNGiREVy6sLGW3KgRnENDvz2uNH9XcVakvmrK+IKSpdGM9ikSGqLuhiEYeAPqLUv5YajkHnYDHcNP1cGYJZR+uxy+2qlVuFo5o79AYs5CgAEu60UxfTa9s9vh7P7eNJIk0o4fm9u6BWevChmEn/wJtfg0PTjQcijzd8VnvwKewUZTDpCTkFlDPzG44RAacTlEanmlQ0ibt2VctOV5XjMsSnX2QhxYfJJ6ecIYrGrula5Oid1Fmv+D5SzL+JOXXkP4rcL7UkbcCSlcxAcV7LUuC1jR+WLuORNuzoc1qkiY8B9DUFV+8TrwE1owI+UD+cCizRKsDvHcA8TPCfbo7xameRFdTi/FKGOte+taisH8nXgkMRUCMAyFvfL5iLzUIhsvrz0H4ja8WKDRVyHQ9/CGzUm71s5rtUiSuvzm+FkIpghXn6GZ8sPQrGEBj2SQK/J5lZhLqvldRBWKbgpdhQ1tpF8LbgchLGRU+PRsmWp1+uJ8gPsaA9CGjQJkLsaVHS1jRFqKsdFALZX+9PHV4NjAZhp4jwMSas30EFkD2FIdcVGCfsqMlMwqPWdZDz7gCWxQUOZ5VOmsiW4IgCTHwbhIOyFIRJeT5KFfljQmR7s/O+Mih2lcDpelRYLLutrEj2NrwdXVsAGmArDIbwH4WWA4MLyW58iS5GpVWNC4XzqB4KmNal8dheyDTi7T2MqC8B6SthTEFwfCw4N+q7tQEeLL3vK5QY4CRIFfdpYj/50cbaVVg2ogGkTkJw+CnX0ZSO4FwKnY3u5Fbd+GE5RiNbQdaPoITIYM0VfNtSj9QsKz63ACeCaUYptIbmF/uj5Oex9e3gJIbXWcSX2/nuo+yLu8pCb4LA19BXc2VyvR+v+BT2zrcCliM0gzusb0rnZ7LknyJP+CIaC2e6RGh6UAJIc0irYJg7qYruo06YVuAliQ3EXqXsPfv68u/v5TX6kcMhc3t1jS/NwEA7aLKGpZsBncCh6vqzVuRU4FIChEAwFYD/uivF/3/oKCM6Xf9z/RGwD+9BMkVFF4NgLcLV2hCZd2sXdTu+Xp4Fvtu/v77jxE+AEpHCYTRR61kG4MdnGGTEuxZdaOPPSDlyO3LihbeS77wzvr7/+InAj8cd9vze4u7//3v+fA3C93jckflYaWkrjlu4G0w4cDsAMFID9uEfjO0G7uwPBTcX7/+4P4IU7+SAcmYYymott3iOlHTgUgBk4AGNwZGC45+0dWpTiHX7h/kB7KI5q8GPw1vI9DNqBMw0DwfWxzf/+nYNTlPGP+4LtkOR6/f5hU3p9OJSEG3hvcVsoHB6z2Wy+vRsMHv6XXB4ehuvTeaSZcHNwkIRrmmDLtl1rYiPP7b3rVbiXPqxuT1NvEM4l1QPD8xaLhYcG/PAWGTxk+GHxX4dOGfReXl5e0br8B5fNbhDusd673Tgmh+FeenKkvd4m3LCoTRZ7xZUiJq5Ja/uZHBl9DPci5Nrr6+stwuGaOt+ZQatc/AVNrZZi63Avr683CkdTOpSPC+u1Y9AOdVzHXCWpu0DaqB0+2kPhAO8m4RKgMVJiG9cGFVtO8rcJ6foefgCH8W4RblIta5GDdJxdz+lmfyPcK0d3i3CwkTXBQsvzlOSvZDNnIqzcHbq+UIvOti8Hh9YlTsVNqD5nJrh1LEgXdBHhRtrBI1n9V27cJJydPW1wa4OBncEKRJcTAWJLucNNYsmXhZOHjgmaBzsCprxTn1wWlmlYqKvVwRIMDze5SThSKaLOGxn9yWRIKpoa6c63jyQVk2K0esvLduE2rBuKff8e3Y/L5WuMduHouQm1bxcBNXHm6R8AJ6+JpIoT4tDLoKor+U+Ak1PvyVhwYZaZG6rh2n8GnAy7dJWlal4JrbtJdQf3deDM4bBBUfDVE9VuE0Wn3jAkDoIGx20FlvVr4HALqGHUMkt7tdc/cnDg5lnjNDMSKEqo+LV94XgZKiNl/EvgJiSHtur1Le3wsejq8FTthHtOwBBhX6fWZgItYJ/rqzkBDlqZ8tq1Y2e+Zct1BNfk4U5bVmTTKqyc1BmH5zQNjd/n8+AsONo2U1lpNLo/EJo8qepTwkWUZ8FVuylJq8aJcBbemfbPWpak2GPzqah6FC7hNfITcNz0pLPavawBvUXMOXCsGZmaGNqQdgxOVf85X+cYnD7lTMxZcEc61w/BkULjrizvkAsOH1bxgVZSnBHk4cx9l2Kia8O6QSHHXsjw9+Bi5Bj2d79i4iwAbnkmHH8jmkitw5kJPo375AnAZ3qeQbcKvBWDG8pphq4aKz6MFlBcrWlGlto1yRUTLC8QuHhKaH22Qy75vj+Wt3O0Gt9laTAgrw4GDT0dR+A01q5reywHZXBpcVTOSBg8qzdbTHI5qzkXztF9YudfVOOxxqKE4NfiWovluDj0og/emLnR59DojVTNL9sDGnppD+qcAQ1dT6bMTpEZJZxbHGYkwoy4E/EGgUPSUaGBA7+HpKp2Dn+WbBwwZK5/YVS4uBIu0Pc6SjHP8p2eOhtwN546A65PpOOwMyu5WzjxlNySwXEW9Iz05ImKEb0zswlceQsHlUYrDryOfhjQk0OQMZzuj1l7OqigLs0ZSozdwmj57pd66dMDB2GIPrCsnFU7XXI2OQQeke5ew0oYHJhOLcETfsSq1reRlYB6gotsjC3TOy1pRrIbph6sV6x2j4DkbSwbt10a1M0D3IAefwlg5sj2zctlqS/BBQZ+0Z1PfYf0hrQQ2Rp4YllWLJ8DZ/fxhD2BriyXuQJYlEJR7iJFhXXdz1FfYPbZOWNMDHLF1QdsaeAqLMsBOZelD8DF6QEsTmpQLN5D4CajoleYDPjkmdYSL6XI0NjGVC6XcB4XFuM7RgHonitgNSG2mqubCSlIkcH5tDs21Kl4OLgybqGuHiQ3r/i5z8BRS0LDDTZLEy9Fw6HDoLcMSfCXwMNpZlntwx8DGReFIlgVxWEzPOfiXhS+XIULpu++v3yfV+CCy+FsjxrutCaC6s29sv3wqxRSRM2Sy9PTY4M7akF8zgfgbmcODumajgVKHEIBJ18OR703+cLZspyo9c3vZjirDlc55QJwEw6O9kaRk2QFnIjtoo6zhPAInP4pODIlIgQGBx3Nhpuw8Q9kOmBLj8El+CtxuZSPOxPvF1kcPfnBrCUR5/s4sILxiJ5b9av53wVwcFIlrVgG2P42GgPnY3DwWOzQ7eghEh4uLo/sMDhwFPMi5tQPwJ23LAvHi7dI86rZIzfSKLTH4gJnoRGOCJwcQEvKVUmyYQ4Or0FqRBicFFIllEm74iGd8z8HJxchfOEKiCIS9bETI6e2HZs/pETDA3B020CwoQwNocukBidvmVOb0yQI37COngaRGMSoCrdl5wrPKTPsFXgKOCQ6HKN47jpx+uxOIMSGorQAK5JH7Ty/LOlZLLW/clCywNxjFa5SRIFlSWYeb8V3hTcofM2FRCwoOxDP1Tn+nRgJ4KxF5Y4ZRJE8ujOHN1Fx42xd52QcgRZOBD0u7MNw2OmFb1yOQFODBp0r7hcQjs+AG+7BFfmctYL5kbwnM4uSGUzdbDAoZOnuFtzN0BxbPiI5hcDRWhF+9j7XyVmtOhw7CnoiHDL2rNec37/BE2MGIaV3jkJpJ3sdt9yhCy41OQsq+eGTajAXYK89do++iAsZ988hTQs9ErGRDMPRGL9zAKFM3TrG+EYHurKMT6s4WzS6rxcI+LqCuUE+rnqbxF26Jhds/vPVj+3SRKh8LLaaasvbMsoPxm9jkV4jr23rH9iK47HV7RV0cP9pcDvrD4ZbmX8qHO7yqtrXY3t55CXbrDzldsvMG4Fz839dQXAz180yh/wvCnaOuV49Dheum+fOv64ruA7puUlc10H/5C5yjulqbaIPoVxeEDL04Ar4wxF6M3pPhj/qwkivCbfpu7a7iTLTsrwVaN3Oi1LVdFN3GPWjoT3JjYQ6vYk57Dtmsp5klpCZzsIZ2kPbTXeZaZupR07PZ1lkr51hakSRaSbuzv7FcFuzcTD7IVjJBP8Ze+VA2IF+WomZp//IeSTb7sJZJTSuidJH1Uk3G9mRUwG9kMuRE60f0VNztVqtSeaUOrbp4o8+RpHqkCDNbp5BG3APAhnfvlV+oQdUHCMFuMhLTIg88Q+nv8EzxLeI3JmuSQt6tmPukKRS/MKjYZqObXjpYiOv5LxvRwC32yHDRD5qObvcXkdki4H/b3/DP/Hjrzcoi8z1drYjIz2aFHCR82+awN+OcqxmLPzM1o63wpLDrTjou3ARxgaRDJEkQbuczEtkBOeAiqIodXJta5lPbLTChDSDmawTnCcgayELCb7Hcw5lTZo6OEiMmAbkQWrz8DSJSARurVcpEpTsJgtLdhcL9+quYGfKGxxJUyVIQFEsrHD4NxuvrFVZ9zJ3MtnhsTc008e3PzNNJqN0beOP4pT90naN3xR+JWdMs71WsS627OA6uA6ug+vgOrgOroPr4Dq4Dq6D6+A6uA6ug+vgOrgOroPr4Dq4Dq6D6+A6uA6ug+vgOrgOroPr4NoY/w9oPR9XpEyr8AAAAABJRU5ErkJggg==';
+
+
+// ===== রিপোর্ট/লেজার হেডারে ব্যবহারের জন্য দোকান/প্রতিষ্ঠানের সেটিংস ক্যাশ করে রাখা হয় —
+// বারবার নেটওয়ার্ক কল না করে সব রিপোর্ট/লেজার পেজেই লোগো ও নাম দেখানো যায়
+window._reportShopSettings = null;
+async function getReportShopSettings_(){
+  if (window._reportShopSettings) return window._reportShopSettings;
+  try {
+    const r = await api('accGetSettings', {});
+    window._reportShopSettings = (r && r.ok) ? (r.settings || {}) : {};
+  } catch(e) { window._reportShopSettings = {}; }
+  return window._reportShopSettings;
+}
+// যেকোনো রিপোর্ট/লেজারের উপরে বসানোর জন্য প্রতিষ্ঠানের লোগো + নাম সহ একটা হেডার —
+// PDF হিসেবে প্রিন্ট করলেও এটা সবার উপরে দেখা যাবে
+function reportHeaderHtml_(shop){
+  const logoSrc = (shop && shop.invoice_logo_url) || DEFAULT_INVOICE_LOGO;
+  const nameBn = (shop && shop.shop_name_bn) || 'মেথোমার্ট';
+  const nameEn = (shop && shop.shop_name_en) || '';
+  const addr = (shop && shop.address) || '';
+  const phone = (shop && shop.phone) || '';
+  return `<div class="report-header">
+      <img src="${esc(logoSrc)}" alt="logo">
+      <div>
+        <div class="rh-bn">${esc(nameBn)}</div>
+        ${nameEn?`<div class="rh-en">${esc(nameEn)}</div>`:''}
+        ${addr?`<div class="rh-line">${esc(addr)}</div>`:''}
+        ${phone?`<div class="rh-line">${esc(phone)}</div>`:''}
+      </div>
+    </div>`;
+}
+
+// এন্ট্রি/সাবমিট বাটনে ক্লিক করার পর সার্ভার থেকে উত্তর আসতে যতক্ষণ সময় লাগে, ততক্ষণ বাটনটা
+// ডিজেবল রাখা হয় — যাতে ধীরগতির নেটওয়ার্কে কেউ তাড়াহুড়ো করে দুইবার ক্লিক করলেও ডবল এন্ট্রি
+// (ডবল বিক্রয়/আদায়/পেমেন্ট ইত্যাদি) তৈরি না হয়। কোন বাটনে ক্লিক হয়েছে সেটা ক্যাপচার-ফেজে
+// ট্র্যাক করা হয় (onclick হ্যান্ডলার চালু হওয়ার আগেই), যাতে সেই ফাংশনের ভেতরের api() কলটা
+// ঠিক ওই বাটনটাই খুঁজে পেয়ে ডিজেবল/এনাবল করতে পারে।
+let _lastClickedBtn = null;
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('button');
+  if (b) _lastClickedBtn = b;
+}, true);
+
+async function api(action, data){
+  const btn = _lastClickedBtn;
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(Object.assign({action, adminToken:getAdminToken()}, data||{}))
+    });
+    return await res.json();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.style.display='block';
+  clearTimeout(window._tt); window._tt=setTimeout(()=>t.style.display='none', 2600);
+}
+function showLoginSuccess(){
+  const el=document.getElementById('successOverlay');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1600);
+}
+
+// ড্যাশবোর্ড লোড হওয়ার সময় দেখানোর জন্য — ৫ সেকেন্ড পর নিজে থেকেই বন্ধ
+// হয়ে যায়, অথবা ইউজার "ঠিক আছে" চাপলেও বন্ধ হয়
+let _welcomeOverlayTimer = null;
+function showWelcomeBackPopup(){
+  const el=document.getElementById('welcomeOverlay');
+  if(!el) return;
+  el.classList.add('show');
+  clearTimeout(_welcomeOverlayTimer);
+  _welcomeOverlayTimer = setTimeout(hideWelcomeBackPopup, 5000);
+}
+function hideWelcomeBackPopup(){
+  const el=document.getElementById('welcomeOverlay');
+  if(el) el.classList.remove('show');
+  clearTimeout(_welcomeOverlayTimer);
+}
+document.getElementById('welcomeOverlayCloseBtn')?.addEventListener('click', hideWelcomeBackPopup);
+function money(n){ return (Number(n)||0).toLocaleString('bn-BD',{maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ================= রিপোর্ট এক্সপোর্ট: Excel / PDF ================= */
+// পেজে যেকোনো <table> কে সরাসরি একটা .xlsx ফাইলে রূপান্তর করে ডাউনলোড করে দেয়
+function exportTableToExcel(tableEl, filename){
+  if(typeof tableEl === 'string') tableEl = document.querySelector(tableEl);
+  if(!tableEl){ toast('এক্সপোর্ট করার মতো কোনো টেবিল পাওয়া যায়নি'); return; }
+  const wb = XLSX.utils.table_to_book(tableEl, {sheet:'রিপোর্ট'});
+  XLSX.writeFile(wb, (filename||'report')+'.xlsx');
+}
+// বর্তমানে যা স্ক্রিনে আছে (সাইডবার/বাটন বাদ দিয়ে) সেটাকেই ব্রাউজারের প্রিন্ট
+// ডায়ালগে পাঠায় — সেখান থেকে "Save as PDF" বেছে নিলেই PDF ফাইল তৈরি হয়ে যায়
+function exportReportToPDF(){
+  document.body.classList.add('print-report');
+  window.print();
+  setTimeout(()=>document.body.classList.remove('print-report'), 500);
+}
+function exportBtns(tableSelector, filename){
+  return `<div style="margin:10px 0; display:flex; gap:8px;">
+    <button class="btn ghost sm" onclick='exportTableToExcel(${JSON.stringify(tableSelector)}, ${JSON.stringify(filename)})'>⬇️ Excel</button>
+    <button class="btn ghost sm" onclick="exportReportToPDF()">🖨️ PDF</button>
+  </div>`;
+}
+
+async function doLogin(){
+  const username=document.getElementById('loginUser').value.trim();
+  const password=document.getElementById('loginPass').value;
+  const r = await api('adminLogin', {username,password});
+  if(!r.ok){ document.getElementById('loginErr').textContent = r.error||'লগইন ব্যর্থ'; return; }
+  if(r.can_accounting===false){ document.getElementById('loginErr').textContent = 'এই এডমিনের হিসাব (Accounting) মডিউলে প্রবেশের অনুমতি নেই — এডমিন প্যানেলের Admins ট্যাব থেকে অনুমতি চালু করুন।'; return; }
+  setAdminToken(r.token);
+  localStorage.setItem('mm_admin_name', r.name || username);
+  localStorage.setItem('mm_admin_is_super', r.is_super ? '1' : '0');
+  showLoginSuccess();
+  boot(false);
+}
+
+async function boot(showWelcome){
+  if(!getAdminToken()){
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('appShell').style.display='none';
+    return;
+  }
+  // টোকেন থাকলেও (যেমন admin.html থেকে লগইন করা অবস্থায় সরাসরি এই পেজে
+  // ঢুকলে) সার্ভারে গিয়ে হিসাব-মডিউল অ্যাক্সেসের অনুমতি আছে কিনা যাচাই করা
+  // হচ্ছে — অনুমতি না থাকলে পুরো Accounting UI (ট্যাব/বাটন/ফর্ম) দেখানোই হবে
+  // না, লগইন স্ক্রিনে এরর মেসেজ দেখিয়ে ফিরিয়ে দেওয়া হয়।
+  if(showWelcome!==false) showWelcomeBackPopup();
+  const access = await api('accCheckAccess', {});
+  if(!access.ok){
+    hideWelcomeBackPopup();
+    if(access.session_invalid) clearAdminToken();
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('appShell').style.display='none';
+    document.getElementById('loginErr').textContent = access.error || 'এই এডমিনের হিসাব (Accounting) মডিউলে প্রবেশের অনুমতি নেই।';
+    return;
+  }
+  localStorage.setItem('mm_admin_name', access.name || localStorage.getItem('mm_admin_name') || '');
+  localStorage.setItem('mm_admin_is_super', access.is_super ? '1' : '0');
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appShell').style.display='flex';
+  document.getElementById('loggedInAsName').textContent = localStorage.getItem('mm_admin_name') || '';
+  loadTab(currentTab);
+}
+
+/* সাইডবার টগল (মোবাইল) */
+const sidebarNav=document.getElementById('sidebarNav'), overlay=document.getElementById('sidebarOverlay');
+document.getElementById('sidebarToggle').addEventListener('click', ()=>{
+  sidebarNav.classList.toggle('open'); overlay.classList.toggle('show');
+});
+overlay.addEventListener('click', ()=>{ sidebarNav.classList.remove('open'); overlay.classList.remove('show'); });
+
+document.getElementById('sidebarLogoutBtn').addEventListener('click', async ()=>{
+  await api('adminLogout', { adminToken: getAdminToken() });
+  clearAdminToken();
+  location.reload();
+});
+
+/* সাইডবারের গ্রুপ (Sales/Purchase/Accounts ইত্যাদি) খোলা-বন্ধ — একবারে একটাই গ্রুপ খোলা থাকে (অ্যাকর্ডিয়ন) */
+function toggleGrp(el){
+  const grp = el.closest('.grp');
+  const wasOpen = grp.classList.contains('open');
+  document.querySelectorAll('#sidebarNav .grp.open').forEach(g=>g.classList.remove('open'));
+  if(!wasOpen) grp.classList.add('open');
+}
+
+/* ================= ট্যাব রাউটিং ================= */
+let currentTab='dashboard';
+document.querySelectorAll('.tab-btn[data-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTab=btn.dataset.tab;
+    const parentGrp=btn.closest('.grp');
+    if(parentGrp){ document.querySelectorAll('#sidebarNav .grp.open').forEach(g=>{ if(g!==parentGrp) g.classList.remove('open'); }); parentGrp.classList.add('open'); }
+    sidebarNav.classList.remove('open'); overlay.classList.remove('show');
+    loadTab(currentTab);
+  });
+});
+
+function loadTab(tab){
+  const root=document.getElementById('viewRoot');
+  root.innerHTML='<div class="tab-loading"><div class="spin"></div><div class="txt">লোড হচ্ছে…</div></div>';
+  const fn = TAB_LOADERS[tab];
+  if(fn) fn(root); else root.innerHTML='<div class="empty">শীঘ্রই আসছে</div>';
+}
+
+function openModal(html){
+  document.getElementById('modalBox').innerHTML = '<button class="x" onclick="closeModal()">✕</button>'+html;
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+document.getElementById('modalBg').addEventListener('click', e=>{ if(e.target.id==='modalBg') closeModal(); });
+
+/* ================= বাংলা সংখ্যা → কথায় (টাকার জন্য) ================= */
+function bnAmountInWords(num){
+  num = Math.round(Number(num)||0);
+  if(num===0) return 'শূন্য টাকা মাত্র';
+  const ones=['','এক','দুই','তিন','চার','পাঁচ','ছয়','সাত','আট','নয়','দশ','এগার','বার','তের','চৌদ্দ','পনের','ষোল','সতের','আঠার','ঊনিশ'];
+  const tens=['','','বিশ','ত্রিশ','চল্লিশ','পঞ্চাশ','ষাট','সত্তর','আশি','নব্বই'];
+  function twoDigit(n){
+    if(n<20) return ones[n];
+    const t=Math.floor(n/10), o=n%10;
+    return o===0? tens[t] : tens[t]+' '+ones[o];
+  }
+  function threeDigit(n){
+    const h=Math.floor(n/100), r=n%100;
+    let s='';
+    if(h) s+= ones[h]+'শত ';
+    if(r) s+= twoDigit(r);
+    return s.trim();
+  }
+  let n=num, parts=[];
+  const crore=Math.floor(n/10000000); n%=10000000;
+  const lakh=Math.floor(n/100000); n%=100000;
+  const thousand=Math.floor(n/1000); n%=1000;
+  const hundred=n;
+  if(crore) parts.push(threeDigit(crore)+' কোটি');
+  if(lakh) parts.push(threeDigit(lakh)+' লক্ষ');
+  if(thousand) parts.push(threeDigit(thousand)+' হাজার');
+  if(hundred) parts.push(threeDigit(hundred));
+  return parts.join(' ')+' টাকা মাত্র';
+}
+
+/* ================= ড্যাশবোর্ড ================= */
+async function loadDashboard(root){
+  const [r, wb, trendRes, topRes] = await Promise.all([
+    api('accGetDashboard', {}), api('accGetCashBankBalance', {}),
+    api('accGetSalesTrend', {days:14}), api('accGetTopProducts', {limit:5})
+  ]);
+  if(!r.ok){ root.innerHTML='<div class="empty">'+esc(r.error||'ত্রুটি')+'</div>'; return; }
+  const wallets = wb.wallets || [];
+  const cashBal = (wallets.find(w=>w.key==='cash')||{}).balance || 0;
+  root.innerHTML = `
+    <h2 style="color:var(--forest); margin-bottom:14px;">📊 ড্যাশবোর্ড</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">আজকের বিক্রয়</div><div class="val">৳${money(r.today_sales)}</div></div>
+      <div class="stat"><div class="lbl">আজকের ক্রয়</div><div class="val">৳${money(r.today_purchase)}</div></div>
+      <div class="stat"><div class="lbl">আজকের খরচ</div><div class="val">৳${money(r.today_expense)}</div></div>
+      <div class="stat"><div class="lbl">নগদ হাতে</div><div class="val">৳${money(cashBal)}</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">সর্বমোট বিক্রয়</div><div class="val">৳${money(r.total_sales)}</div></div>
+      <div class="stat"><div class="lbl">সর্বমোট ক্রয়</div><div class="val">৳${money(r.total_purchase)}</div></div>
+      <div class="stat"><div class="lbl">সর্বমোট খরচ</div><div class="val">৳${money(r.total_expense)}</div></div>
+      <div class="stat"><div class="lbl">আনুমানিক নিট মুনাফা</div><div class="val">৳${money(r.net_profit)}</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat warn" style="cursor:pointer;" onclick="loadTab('due-aging'); document.querySelector('[data-tab=\\'due-aging\\']').click();"><div class="lbl">গ্রাহকের কাছে পাওনা</div><div class="val">৳${money(r.total_due)}</div></div>
+      <div class="stat warn" style="cursor:pointer;" onclick="loadTab('due-aging'); document.querySelector('[data-tab=\\'due-aging\\']').click();"><div class="lbl">সরবরাহকারীকে বাকি</div><div class="val">৳${money(r.total_payable)}</div></div>
+      <div class="stat"><div class="lbl">স্টক মূল্য</div><div class="val">৳${money(r.stock_value)}</div></div>
+      ${r.stock_alert_enabled ? `<div class="stat ${r.low_stock_count>0?'warn':''}" style="cursor:pointer;" onclick="loadTab('inventory'); document.querySelector('[data-tab=\\'inventory\\']').click();"><div class="lbl">কম স্টকে পণ্য (ক্লিক করে দেখুন)</div><div class="val">${r.low_stock_count}</div></div>` : ''}
+    </div>
+    <div class="card"><h2>🏦 ওয়ালেট ব্যালেন্স (নগদ / ব্যাংক / মোবাইল ব্যাংকিং)</h2>
+      <div class="stat-grid">
+        ${wallets.map(w=>`<div class="stat"><div class="lbl">${esc(w.label)}</div><div class="val">৳${money(w.balance)}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="card"><h2>📈 বিক্রয় ট্রেন্ড (গত ১৪ দিন)</h2><canvas id="salesTrendChart" height="220"></canvas></div>
+    <div class="card"><h2>🏆 টপ ৫ বিক্রিত পণ্য</h2><canvas id="topProductsChart" height="220"></canvas></div>
+  `;
+  if(window.Chart){
+    const trend = trendRes.trend||[];
+    new Chart(document.getElementById('salesTrendChart'), {
+      type:'line',
+      data:{ labels: trend.map(t=>t.date.slice(5)), datasets:[{ label:'বিক্রয় (৳)', data: trend.map(t=>t.total), borderColor:'#1F3D2B', backgroundColor:'rgba(31,61,43,.12)', fill:true, tension:.3 }] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+    const top = topRes.top||[];
+    new Chart(document.getElementById('topProductsChart'), {
+      type:'bar',
+      data:{ labels: top.map(t=>t.name), datasets:[{ label:'বিক্রিত পরিমাণ', data: top.map(t=>t.qty), backgroundColor:'#D4A017' }] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+    });
+  }
+}
+
+/* ================= জেনেরিক লিস্ট রেন্ডারার ================= */
+function tableHTML(cols, rows){
+  let h='<div class="tbl-wrap"><table><thead><tr>'+cols.map(c=>'<th>'+c.label+'</th>').join('')+'</tr></thead><tbody>';
+  if(!rows.length) h+='<tr><td colspan="'+cols.length+'" class="empty">কোনো তথ্য নেই</td></tr>';
+  rows.forEach(row=>{ h+='<tr>'+cols.map(c=>'<td>'+(c.render?c.render(row):esc(row[c.key]))).join('</td>')+'</tr>'; });
+  h+='</tbody></table></div>';
+  return h;
+}
+
+/* ================= পণ্য (Products) ================= */
+async function loadProducts(root){
+  const r = await api('accGetProducts', {});
+  const products = r.products||[];
+  root.innerHTML = `
+    <div class="card"><h2>📦 পণ্য তালিকা <button class="btn gold sm" onclick="openProductForm()">+ নতুন পণ্য</button> <button class="btn ghost sm" onclick="importWebsiteProducts()">🔄 ওয়েবসাইট থেকে পণ্য ইম্পোর্ট</button></h2>
+    ${tableHTML([
+      {label:'নাম', key:'name'},
+      {label:'ক্যাটাগরি', key:'category'},
+      {label:'একক', key:'unit'},
+      {label:'ক্রয়মূল্য', render:p=>'৳'+money(p.cost_price)},
+      {label:'বিক্রয়মূল্য', render:p=>'৳'+money(p.sale_price)},
+      {label:'স্টক', render:p=>'<b class="'+(p.current_stock<=p.reorder_level?'tag warn':'')+'">'+p.current_stock+'</b>'},
+      {label:'', render:p=>`<button class="btn ghost sm" onclick='editProduct(${JSON.stringify(p)})'>✏️</button> <button class="btn danger sm" onclick="deleteProduct('${p.id}')">🗑️</button>`}
+    ], products)}
+    </div>`;
+}
+async function importWebsiteProducts(){
+  toast('ওয়েবসাইটের সাথে মেলানো হচ্ছে...');
+  // ধাপ ১: Products শিট ওয়েবসাইটের ৬৬টা পণ্যের সাথে সিঙ্ক (আপডেট/নতুন যোগ) করা হয় —
+  // যাতে আগে থেকে না-থাকা বা পুরনো নাম/দামের পণ্যও এখন সঠিক থাকে।
+  const s = await api('adminSyncWebsiteProducts', {});
+  if(!s.ok){ toast(s.error||'সিঙ্ক ব্যর্থ হয়েছে'); return; }
+  // ধাপ ২: সিঙ্ক করা Products শিট থেকে হিসাব সফটওয়্যারে (Acc_Products) ইম্পোর্ট —
+  // সাইজ/জার নাম পণ্যের নামের সাথে জোড়া থাকবে (যেমন "শাহী মশলা (২০০ গ্রাম জার)")
+  const r = await api('accImportProductsFromWebsite', {});
+  if(r.ok){ toast(`ওয়েবসাইটের ${s.total} টা পণ্যের মধ্যে ${r.imported} টা নতুন যোগ হয়েছে (আগে থেকে ছিল: ${r.skipped})`); loadTab('products'); }
+  else toast(r.error||'ত্রুটি');
+}
+function openProductForm(p){
+  p=p||{};
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">${p.id?'পণ্য এডিট':'নতুন পণ্য'}</h2>
+    <div class="field"><label>নাম</label><input id="pf_name" value="${esc(p.name||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>ক্যাটাগরি</label><input id="pf_category" value="${esc(p.category||'')}"></div>
+      <div class="field"><label>একক</label><select id="pf_unit">${['লিটার','কেজি','পিস'].map(u=>`<option value="${u}" ${(p.unit||'পিস')===u?'selected':''}>${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ক্রয়মূল্য</label><input id="pf_cost" type="number" value="${p.cost_price||0}"></div>
+      <div class="field"><label>বিক্রয়মূল্য</label><input id="pf_price" type="number" value="${p.sale_price||0}"></div>
+    </div>
+    <div class="row2">
+      ${p.id?'':'<div class="field"><label>প্রারম্ভিক স্টক</label><input id="pf_opening" type="number" value="0"></div>'}
+      <div class="field"><label>রি-অর্ডার লেভেল</label><input id="pf_reorder" type="number" value="${p.reorder_level||5}"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveProduct('${p.id||''}')">সংরক্ষণ করুন</button>
+  `);
+}
+function editProduct(p){ openProductForm(p); }
+async function saveProduct(id){
+  const payload = {
+    name: document.getElementById('pf_name').value.trim(),
+    category: document.getElementById('pf_category').value.trim(),
+    unit: document.getElementById('pf_unit').value.trim(),
+    cost_price: Number(document.getElementById('pf_cost').value)||0,
+    sale_price: Number(document.getElementById('pf_price').value)||0,
+    reorder_level: Number(document.getElementById('pf_reorder').value)||0
+  };
+  if(!payload.name){ toast('নাম দিন'); return; }
+  let r;
+  if(id){ r = await api('accUpdateProduct', Object.assign({id}, payload)); }
+  else { payload.opening_stock = Number(document.getElementById('pf_opening').value)||0; r = await api('accAddProduct', payload); }
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('products'); } else toast(r.error||'ত্রুটি');
+}
+async function deleteProduct(id){
+  if(!confirm('এই পণ্যটি মুছে ফেলতে চান?')) return;
+  const r = await api('accDeleteProduct', {id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('products'); } else toast(r.error);
+}
+
+/* ================= ইনভেন্টরি ================= */
+async function loadInventory(root){
+  const r = await api('accStockReport', {});
+  const products = r.products||[];
+  root.innerHTML = `
+    <div class="card"><h2>🏬 ইনভেন্টরি (বর্তমান স্টক)</h2>
+    <p class="muted">মোট স্টক মূল্য: ৳${money(r.total_stock_value)}</p>
+    ${tableHTML([
+      {label:'নাম', key:'name'}, {label:'ক্যাটাগরি', key:'category'},
+      {label:'বর্তমান স্টক', render:p=>p.current_stock+' '+esc(p.unit)},
+      {label:'রি-অর্ডার লেভেল', key:'reorder_level'},
+      {label:'স্টক মূল্য', render:p=>'৳'+money(p.stock_value)},
+      {label:'অবস্থা', render:p=>p.low_stock?'<span class="tag warn">⚠ কম স্টক</span>':'<span class="tag ok">ঠিক আছে</span>'},
+      {label:'', render:p=>`<button class="btn ghost sm" onclick="adjustStock('${p.id}','${esc(p.name)}')">±সমন্বয়</button>`}
+    ], products)}
+    </div>`;
+}
+function adjustStock(id, name){
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">স্টক সমন্বয় — ${esc(name)}</h2>
+    <div class="field"><label>পরিমাণ (বাড়াতে + দিন, কমাতে − দিন, যেমন -5)</label><input id="adj_qty" type="number" value="0"></div>
+    <button class="btn gold" style="width:100%;" onclick="doAdjustStock('${id}')">সংরক্ষণ করুন</button>
+  `);
+}
+async function doAdjustStock(id){
+  const qty = Number(document.getElementById('adj_qty').value)||0;
+  const r = await api('accManualStockAdjust', {product_id:id, qty});
+  if(r.ok){ closeModal(); toast('স্টক আপডেট হয়েছে'); loadTab('inventory'); } else toast(r.error);
+}
+
+/* ================= গ্রাহক ================= */
+async function loadCustomers(root){
+  const r = await api('accGetCustomers', {});
+  window._customersAllList = r.customers||[];
+  root.innerHTML = `
+    <div class="card"><h2>👥 গ্রাহক তালিকা <button class="btn gold sm" onclick="openCustomerForm()">+ নতুন গ্রাহক</button></h2>
+    <div class="search-bar"><input id="cu_q" placeholder="নাম বা মোবাইল নম্বর খুঁজুন" oninput="renderCustomerTable()"></div>
+    <div id="custTblWrap"></div>
+    </div>`;
+  renderCustomerTable();
+}
+function renderCustomerTable(){
+  const q = (document.getElementById('cu_q')?.value||'').trim().toLowerCase();
+  const list = (window._customersAllList||[]).filter(c => !q || (c.name||'').toLowerCase().indexOf(q)!==-1 || (c.phone||'').toLowerCase().indexOf(q)!==-1);
+  document.getElementById('custTblWrap').innerHTML = tableHTML([
+      {label:'নাম', key:'name'}, {label:'মোবাইল', key:'phone'}, {label:'ঠিকানা', key:'address'},
+      {label:'মোট পাওনা', render:c=>'৳'+money(c.total_due)},
+      {label:'', render:c=>`<button class="btn ghost sm" onclick="viewCustomerLedger('${c.id}')">📖 লেজার</button> <button class="btn ghost sm" onclick='editCustomer(${JSON.stringify(c)})'>✏️</button> <button class="btn danger sm" onclick="deleteCustomer('${c.id}')">🗑️</button>`}
+    ], list);
+}
+function openCustomerForm(c){
+  c=c||{};
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">${c.id?'গ্রাহক এডিট':'নতুন গ্রাহক'}</h2>
+    <div class="field"><label>নাম</label><input id="cf_name" value="${esc(c.name||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>মোবাইল</label><input id="cf_phone" value="${esc(c.phone||'')}"></div>
+      <div class="field"><label>প্রারম্ভিক বাকি</label><input id="cf_due" type="number" value="${c.opening_due||0}"></div>
+    </div>
+    <div class="field"><label>ঠিকানা</label><input id="cf_address" value="${esc(c.address||'')}"></div>
+    <button class="btn gold" style="width:100%;" onclick="saveCustomer('${c.id||''}')">সংরক্ষণ করুন</button>
+  `);
+}
+function editCustomer(c){ openCustomerForm(c); }
+async function saveCustomer(id){
+  const payload={ name:document.getElementById('cf_name').value.trim(), phone:document.getElementById('cf_phone').value.trim(),
+    address:document.getElementById('cf_address').value.trim(), opening_due:Number(document.getElementById('cf_due').value)||0 };
+  if(!payload.name){ toast('নাম দিন'); return; }
+  const r = id? await api('accUpdateCustomer', Object.assign({id},payload)) : await api('accAddCustomer', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('customers'); } else toast(r.error);
+}
+async function deleteCustomer(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r = await api('accDeleteCustomer', {id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('customers'); } else toast(r.error);
+}
+
+/* ================= সরবরাহকারী ================= */
+async function loadSuppliers(root){
+  const r = await api('accGetSuppliers', {});
+  window._suppliersAllList = r.suppliers||[];
+  root.innerHTML = `
+    <div class="card"><h2>🚚 সরবরাহকারী তালিকা <button class="btn gold sm" onclick="openSupplierForm()">+ নতুন সরবরাহকারী</button></h2>
+    <div class="search-bar"><input id="su_q" placeholder="নাম বা মোবাইল নম্বর খুঁজুন" oninput="renderSupplierTable()"></div>
+    <div id="supTblWrap"></div>
+    </div>`;
+  renderSupplierTable();
+}
+function renderSupplierTable(){
+  const q = (document.getElementById('su_q')?.value||'').trim().toLowerCase();
+  const list = (window._suppliersAllList||[]).filter(c => !q || (c.name||'').toLowerCase().indexOf(q)!==-1 || (c.phone||'').toLowerCase().indexOf(q)!==-1);
+  document.getElementById('supTblWrap').innerHTML = tableHTML([
+      {label:'নাম', key:'name'}, {label:'মোবাইল', key:'phone'}, {label:'ঠিকানা', key:'address'},
+      {label:'মোট বাকি', render:c=>'৳'+money(c.total_due)},
+      {label:'', render:c=>`<button class="btn ghost sm" onclick="viewSupplierLedger('${c.id}')">📖 লেজার</button> <button class="btn ghost sm" onclick='editSupplier(${JSON.stringify(c)})'>✏️</button> <button class="btn danger sm" onclick="deleteSupplier('${c.id}')">🗑️</button>`}
+    ], list);
+}
+function openSupplierForm(c){
+  c=c||{};
+  openModal(`
+    <h2 style="color:var(--forest); margin-bottom:14px;">${c.id?'সরবরাহকারী এডিট':'নতুন সরবরাহকারী'}</h2>
+    <div class="field"><label>নাম</label><input id="sf_name" value="${esc(c.name||'')}"></div>
+    <div class="row2">
+      <div class="field"><label>মোবাইল</label><input id="sf_phone" value="${esc(c.phone||'')}"></div>
+      <div class="field"><label>প্রারম্ভিক বাকি</label><input id="sf_due" type="number" value="${c.opening_due||0}"></div>
+    </div>
+    <div class="field"><label>ঠিকানা</label><input id="sf_address" value="${esc(c.address||'')}"></div>
+    <button class="btn gold" style="width:100%;" onclick="saveSupplier('${c.id||''}')">সংরক্ষণ করুন</button>
+  `);
+}
+function editSupplier(c){ openSupplierForm(c); }
+async function saveSupplier(id){
+  const payload={ name:document.getElementById('sf_name').value.trim(), phone:document.getElementById('sf_phone').value.trim(),
+    address:document.getElementById('sf_address').value.trim(), opening_due:Number(document.getElementById('sf_due').value)||0 };
+  if(!payload.name){ toast('নাম দিন'); return; }
+  const r = id? await api('accUpdateSupplier', Object.assign({id},payload)) : await api('accAddSupplier', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('suppliers'); } else toast(r.error);
+}
+async function deleteSupplier(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r = await api('accDeleteSupplier', {id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('suppliers'); } else toast(r.error);
+}
+
+/* ================= গ্রাহক/সরবরাহকারী লেজার (তারিখ অনুযায়ী সব লেনদেন, from-to ফিল্টার + সার্চ + Excel/PDF) ================= */
+// তালিকা পেজ থেকে "📖 লেজার" চাপলে সরাসরি party-ledger ট্যাবে সেই গ্রাহক/সরবরাহকারী প্রি-সিলেক্ট করে নিয়ে যায়
+function viewCustomerLedger(id){ openPartyLedgerTab('customer', id); }
+function viewSupplierLedger(id){ openPartyLedgerTab('supplier', id); }
+function openPartyLedgerTab(type, id){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector('[data-tab="party-ledger"]'); if(btn) btn.classList.add('active');
+  currentTab='party-ledger';
+  const root=document.getElementById('viewRoot');
+  loadPartyLedger(root, {type, id});
+}
+async function loadPartyLedger(root, prefill){
+  const type = (prefill&&prefill.type) || window._plType || 'customer';
+  window._plType = type;
+  const [custRes, supRes] = await Promise.all([api('accGetCustomers',{}), api('accGetSuppliers',{})]);
+  window._customers = custRes.customers||[];
+  window._suppliers = supRes.suppliers||[];
+  const list = type==='customer' ? window._customers : window._suppliers;
+  const preId = prefill && prefill.id;
+  const pre = preId ? list.find(x=>String(x.id)===String(preId)) : null;
+  root.innerHTML = `
+    <div class="card">
+      <div id="plFilterCard">
+      <h2>📖 গ্রাহক/সরবরাহকারী লেজার</h2>
+      <div class="row3">
+        <div class="field"><label>ধরন</label><select id="pl_type" onchange="switchPartyLedgerType()">
+          <option value="customer" ${type==='customer'?'selected':''}>👤 গ্রাহক</option>
+          <option value="supplier" ${type==='supplier'?'selected':''}>🚚 সরবরাহকারী</option>
+        </select></div>
+        <div class="field"><label>নাম বা মোবাইল দিয়ে খুঁজুন</label>
+          <input id="pl_search" list="pl_datalist" placeholder="নাম বা মোবাইল লিখুন..." value="${pre?esc(pre.name)+' — '+esc(pre.phone||''):''}" oninput="onPartyLedgerPick()">
+          <datalist id="pl_datalist">${list.map(c=>`<option data-id="${c.id}" value="${esc(c.name)} — ${esc(c.phone||'')}"></option>`).join('')}</datalist>
+        </div>
+        <div class="field" style="align-self:end;"><button class="btn gold" style="width:100%;" onclick="runPartyLedger()">লেজার দেখুন</button></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>তারিখ থেকে (From)</label><input id="pl_from" type="date"></div>
+        <div class="field"><label>তারিখ পর্যন্ত (To)</label><input id="pl_to" type="date"></div>
+        <div class="field" style="align-self:end;"><button class="btn ghost" style="width:100%;" onclick="clearPartyLedgerDates()">সব তারিখ দেখুন</button></div>
+      </div>
+      <input type="hidden" id="pl_id" value="${pre?pre.id:''}">
+      </div>
+      <div id="plResult" style="margin-top:10px;"></div>
+    </div>`;
+  if(pre) runPartyLedger();
+}
+function switchPartyLedgerType(){
+  window._plType = document.getElementById('pl_type').value;
+  document.getElementById('pl_id').value='';
+  document.getElementById('pl_search').value='';
+  document.getElementById('plResult').innerHTML='';
+  loadPartyLedger(document.getElementById('viewRoot'));
+}
+function onPartyLedgerPick(){
+  const val = document.getElementById('pl_search').value;
+  const list = window._plType==='customer' ? window._customers : window._suppliers;
+  const c = (list||[]).find(x => (x.name+' — '+(x.phone||'')) === val);
+  document.getElementById('pl_id').value = c ? c.id : '';
+}
+function clearPartyLedgerDates(){
+  document.getElementById('pl_from').value='';
+  document.getElementById('pl_to').value='';
+  runPartyLedger();
+}
+async function runPartyLedger(){
+  const id = document.getElementById('pl_id').value;
+  if(!id){ toast('নাম বা মোবাইল লিখে তালিকা থেকে একজনকে বেছে নিন'); return; }
+  const type = window._plType;
+  const from = document.getElementById('pl_from').value;
+  const to = document.getElementById('pl_to').value;
+  const [r, shop] = await Promise.all([
+    type==='customer'
+      ? api('accGetCustomerLedger', {customer_id:id, from, to})
+      : api('accGetSupplierLedger', {supplier_id:id, from, to}),
+    getReportShopSettings_()
+  ]);
+  if(!r.ok){ document.getElementById('plResult').innerHTML = '<div class="empty">'+esc(r.error||'ত্রুটি')+'</div>'; return; }
+  const inLabel = type==='customer' ? 'গ্রাহক থেকে পাওনা বাড়ায়' : 'ক্রয় থেকে বাকি বাড়ায়';
+  const outLabel = type==='customer' ? 'আদায় কমায়' : 'পরিশোধ কমায়';
+  const rows = r.entries||[];
+  const rangeTxt = (from||to) ? `(${from||'শুরু থেকে'} — ${to||'আজ পর্যন্ত'})` : '(সর্বমোট)';
+  document.getElementById('plResult').innerHTML = `
+    ${reportHeaderHtml_(shop)}
+    <h3 style="color:var(--forest); margin-bottom:4px;">${type==='customer'?'👤':'🚚'} ${esc(r.customer.name)} — ${esc(r.customer.phone||'')} ${rangeTxt}</h3>
+    <div class="stat-grid" style="margin:10px 0;">
+      <div class="stat"><div class="lbl">প্রারম্ভিক ব্যালেন্স</div><div class="val">৳${money(r.opening_due)}</div></div>
+      <div class="stat ${r.closing_due>0?'warn':''}"><div class="lbl">সমাপনী ব্যালেন্স</div><div class="val">৳${money(r.closing_due)}</div></div>
+    </div>
+    <div id="ledgerTblWrap">
+    ${tableHTML([
+      {label:'তারিখ', key:'date'},
+      {label:'বিবরণ', render:e=>e.ref!=null ? (esc(e.type)+' — '+esc(e.ref)+(e.note?' ('+esc(e.note)+')':'')) : (esc(e.type)+(e.note?' — '+esc(e.note):''))},
+      {label:inLabel, render:e=>e.debit?'৳'+money(e.debit):''},
+      {label:outLabel, render:e=>e.credit?'৳'+money(e.credit):''},
+      {label:'ব্যালেন্স', render:e=>'৳'+money(e.balance)},
+      {label:'', render:e=>e.editable?`<button class="btn ghost sm" onclick='openEditCollectionPayment(${JSON.stringify({voucher_no:e.voucher_no, date:e.date, amount:e.credit, ref_type:e.ref_type, party_type:type, party_id:id})})'>✏️</button> <button class="btn danger sm" onclick="deleteCollectionPayment('${e.voucher_no}')">🗑️</button>`:''}
+    ], rows)}
+    </div>
+    ${exportBtns('#ledgerTblWrap table', (type==='customer'?'customer_ledger_':'supplier_ledger_')+r.customer.name)}`;
+}
+
+/* ================= আদায়/পেমেন্ট এন্ট্রি এডিট/ডিলিট (পার্টি লেজার থেকে) ================= */
+function openEditCollectionPayment(entry){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">${entry.ref_type==='customer_collection'||entry.ref_type==='sale_payment'?'আদায়':'পরিশোধ'} এন্ট্রি এডিট</h2>
+    <input type="hidden" id="ecp_voucher" value="${esc(entry.voucher_no)}">
+    <div class="row3">
+      <div class="field"><label>তারিখ</label><input id="ecp_date" type="date" value="${esc(entry.date)}"></div>
+      <div class="field"><label>পরিমাণ</label><input id="ecp_amount" type="number" value="${entry.amount}"></div>
+      <div class="field"><label>মাধ্যম</label><select id="ecp_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    </div>
+    <div class="field"><label>বিবরণ (ঐচ্ছিক)</label><input id="ecp_desc"></div>
+    <button class="btn gold" style="width:100%;" onclick="submitEditCollectionPayment()">✅ সংরক্ষণ করুন</button>`);
+}
+async function submitEditCollectionPayment(){
+  const voucher_no = document.getElementById('ecp_voucher').value;
+  const amount = Number(document.getElementById('ecp_amount').value)||0;
+  if(amount<=0){ toast('সঠিক পরিমাণ দিন'); return; }
+  const payload = { voucher_no, amount, date:document.getElementById('ecp_date').value,
+    payment_method:document.getElementById('ecp_pm').value, description:document.getElementById('ecp_desc').value.trim() };
+  const r = await api('accEditCollectionPayment', payload);
+  if(r.ok){ closeModal(); toast('এন্ট্রি হালনাগাদ হয়েছে'); runPartyLedger(); } else toast(r.error);
+}
+async function deleteCollectionPayment(voucher_no){
+  if(!confirm('এই এন্ট্রিটা ডিলিট করতে চান? এর প্রভাব (বাকি/পাওনা) স্বয়ংক্রিয়ভাবে ফিরিয়ে নেওয়া হবে।')) return;
+  const r = await api('accDeleteCollectionPayment', {voucher_no});
+  if(r.ok){ toast('এন্ট্রি ডিলিট হয়েছে'); runPartyLedger(); } else toast(r.error);
+}
+
+/* ================= গ্রাহক থেকে সাধারণ বাকি আদায় (নির্দিষ্ট ইনভয়েস ছাড়া) ================= */
+async function loadCustomerCollection(root){
+  const r = await api('accGetCustomers', {});
+  window._customers = r.customers||[];
+  root.innerHTML = `
+    <div class="card"><h2>💵 গ্রাহক থেকে বাকি আদায়</h2>
+      <p class="muted" style="margin-bottom:10px;">নির্দিষ্ট কোনো ইনভয়েস না বেছেই গ্রাহকের সর্বমোট বাকি থেকে আদায় করুন — প্রথমে প্রারম্ভিক বাকি, তারপর পুরনো ইনভয়েস থেকে (FIFO) সমন্বয় হবে।</p>
+      <div class="field"><label>নাম বা মোবাইল দিয়ে গ্রাহক খুঁজুন</label>
+        <input id="cc_search" list="cc_datalist" placeholder="নাম বা মোবাইল লিখুন..." oninput="onCcPick()">
+        <datalist id="cc_datalist">${window._customers.map(c=>`<option value="${esc(c.name)} — ${esc(c.phone||'')}"></option>`).join('')}</datalist>
+      </div>
+      <input type="hidden" id="cc_customer_id">
+      <p class="muted" id="cc_due_preview" style="margin-bottom:10px;"></p>
+      <div class="row3">
+        <div class="field"><label>তারিখ</label><input id="cc_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label>পরিমাণ</label><input id="cc_amount" type="number"></div>
+        <div class="field"><label>মাধ্যম</label><select id="cc_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+      </div>
+      <div class="field"><label>বিবরণ (ঐচ্ছিক)</label><input id="cc_desc"></div>
+      <button class="btn gold" style="width:100%;" onclick="submitCustomerCollection()">✅ আদায় সংরক্ষণ করুন</button>
+    </div>`;
+}
+function onCcPick(){
+  const val = document.getElementById('cc_search').value;
+  const c = (window._customers||[]).find(x => (x.name+' — '+(x.phone||'')) === val);
+  document.getElementById('cc_customer_id').value = c ? c.id : '';
+  document.getElementById('cc_due_preview').textContent = c ? ('বর্তমান সর্বমোট বাকি: ৳'+money(c.total_due)) : '';
+}
+async function submitCustomerCollection(){
+  const customer_id = document.getElementById('cc_customer_id').value;
+  if(!customer_id){ toast('তালিকা থেকে একজন গ্রাহক বেছে নিন'); return; }
+  const amount = Number(document.getElementById('cc_amount').value)||0;
+  if(amount<=0){ toast('সঠিক পরিমাণ দিন'); return; }
+  const payload = { customer_id, amount, date:document.getElementById('cc_date').value,
+    payment_method:document.getElementById('cc_pm').value, description:document.getElementById('cc_desc').value.trim() };
+  const r = await api('accCollectCustomerDue', payload);
+  if(r.ok){ toast('আদায় সংরক্ষিত হয়েছে'); loadTab('customer-collection'); } else toast(r.error);
+}
+
+/* ================= সরবরাহকারীকে সাধারণ বাকি পরিশোধ (নির্দিষ্ট ক্রয় ছাড়া) ================= */
+async function loadSupplierPayment(root){
+  const r = await api('accGetSuppliers', {});
+  window._suppliers = r.suppliers||[];
+  root.innerHTML = `
+    <div class="card"><h2>💵 সরবরাহকারীকে বাকি পরিশোধ</h2>
+      <p class="muted" style="margin-bottom:10px;">নির্দিষ্ট কোনো ক্রয় না বেছেই সরবরাহকারীর সর্বমোট বাকি পরিশোধ করুন — প্রথমে প্রারম্ভিক বাকি, তারপর পুরনো ক্রয় থেকে (FIFO) সমন্বয় হবে।</p>
+      <div class="field"><label>নাম বা মোবাইল দিয়ে সরবরাহকারী খুঁজুন</label>
+        <input id="sp_search" list="sp_datalist" placeholder="নাম বা মোবাইল লিখুন..." oninput="onSpPick()">
+        <datalist id="sp_datalist">${window._suppliers.map(c=>`<option value="${esc(c.name)} — ${esc(c.phone||'')}"></option>`).join('')}</datalist>
+      </div>
+      <input type="hidden" id="sp_supplier_id">
+      <p class="muted" id="sp_due_preview" style="margin-bottom:10px;"></p>
+      <div class="row3">
+        <div class="field"><label>তারিখ</label><input id="sp_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label>পরিমাণ</label><input id="sp_amount" type="number"></div>
+        <div class="field"><label>মাধ্যম</label><select id="sp_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+      </div>
+      <div class="field"><label>বিবরণ (ঐচ্ছিক)</label><input id="sp_desc"></div>
+      <button class="btn gold" style="width:100%;" onclick="submitSupplierPayment()">✅ পরিশোধ সংরক্ষণ করুন</button>
+    </div>`;
+}
+function onSpPick(){
+  const val = document.getElementById('sp_search').value;
+  const c = (window._suppliers||[]).find(x => (x.name+' — '+(x.phone||'')) === val);
+  document.getElementById('sp_supplier_id').value = c ? c.id : '';
+  document.getElementById('sp_due_preview').textContent = c ? ('বর্তমান সর্বমোট বাকি: ৳'+money(c.total_due)) : '';
+}
+async function submitSupplierPayment(){
+  const supplier_id = document.getElementById('sp_supplier_id').value;
+  if(!supplier_id){ toast('তালিকা থেকে একজন সরবরাহকারী বেছে নিন'); return; }
+  const amount = Number(document.getElementById('sp_amount').value)||0;
+  if(amount<=0){ toast('সঠিক পরিমাণ দিন'); return; }
+  const payload = { supplier_id, amount, date:document.getElementById('sp_date').value,
+    payment_method:document.getElementById('sp_pm').value, description:document.getElementById('sp_desc').value.trim() };
+  const r = await api('accPaySupplierDue', payload);
+  if(r.ok){ toast('পরিশোধ সংরক্ষিত হয়েছে'); loadTab('supplier-payment'); } else toast(r.error);
+}
+
+/* ================= বিক্রয় — নতুন (ইনভয়েস তৈরি) / এডিট ================= */
+let saleItems=[];
+let editingSaleId=null; // এডিট মোডে থাকলে এই ইনভয়েসের id, নাহলে null (নতুন ইনভয়েস)
+async function loadSaleNew(root, prefill){
+  const [prodRes, custRes] = await Promise.all([api('accGetProducts',{}), api('accGetCustomers',{})]);
+  window._products = prodRes.products||[];
+  window._customers = custRes.customers||[];
+  editingSaleId = prefill ? prefill.id : null;
+  saleItems = prefill && prefill.items && prefill.items.length
+    ? prefill.items.map(it=>({name:it.name||'', qty:it.qty||1, price:it.price||0, product_id:it.product_id||'', unit:it.unit||''}))
+    : [{name:'',qty:1,price:0,product_id:'',unit:''}];
+  root.innerHTML = `
+    <div class="card"><h2>${prefill?'✏️ ইনভয়েস এডিট — '+esc(prefill.invoice_no):'🧾 নতুন বিক্রয় / ইনভয়েস'}</h2>
+      <div class="row3">
+        <div class="field"><label>তারিখ</label><input id="s_date" type="date" value="${prefill?esc(prefill.date):new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label>গ্রাহক (ঐচ্ছিক)</label><select id="s_customer" onchange="pickSaleCustomer()"><option value="">— ওয়াক-ইন কাস্টমার —</option>${window._customers.map(c=>`<option value="${c.id}" data-phone="${esc(c.phone)}" data-address="${esc(c.address)}" ${prefill && String(prefill.customer_id)===String(c.id)?'selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="s_pm">${['নগদ','বিকাশ','নগদ (Nagad)','রকেট','ব্যাংক','বাকি'].map(pm=>`<option ${prefill && prefill.payment_method===pm?'selected':''}>${pm}</option>`).join('')}</select></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>নাম</label><input id="s_name" placeholder="ওয়াক-ইন কাস্টমার" value="${prefill?esc(prefill.customer_name):''}"></div>
+        <div class="field"><label>মোবাইল</label><input id="s_phone" value="${prefill?esc(prefill.phone):''}"></div>
+        <div class="field"><label>ঠিকানা</label><input id="s_address" value="${prefill?esc(prefill.address):''}"></div>
+      </div>
+      <h3 style="margin:12px 0 6px; color:var(--forest);">পণ্য তালিকা</h3>
+      <div id="saleItemsWrap"></div>
+      <button class="btn ghost sm" onclick="addSaleItemRow()">+ আরেকটি লাইন</button>
+      <div class="totals-box" id="saleTotalsBox"></div>
+      <div class="row3" style="margin-top:10px;">
+        <div class="field"><label>ডিসকাউন্ট</label><input id="s_discount" type="number" value="${prefill?prefill.discount||0:0}" oninput="renderSaleTotals()"></div>
+        <div class="field"><label>পরিশোধ (Paid)</label><input id="s_paid" type="number" value="${prefill?prefill.paid||0:0}" oninput="renderSaleTotals()"></div>
+        <div class="field"><label>নোট</label><input id="s_note" value="${prefill?esc(prefill.note||''):''}"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>Courier</label><input id="s_courier" value="${prefill?esc(prefill.courier||''):''}"></div>
+        <div class="field"><label>CTN</label><input id="s_ctn" type="number" value="${prefill?prefill.ctn||0:0}"></div>
+        <div class="field"><label>Fare</label><input id="s_fare" type="number" value="${prefill?prefill.fare||0:0}"></div>
+      </div>
+      <div class="row3">
+        <div class="field"><label>COD</label><input id="s_cod" type="number" value="${prefill?prefill.cod||0:0}"></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn gold" style="flex:1;" onclick="submitSale()">${prefill?'✅ পরিবর্তন সংরক্ষণ করুন':'✅ ইনভয়েস তৈরি করুন'}</button>
+        ${prefill?`<button class="btn ghost" onclick="loadTab('sale-list'); document.querySelector('[data-tab=\\'sale-list\\']').click();">বাতিল</button>`:''}
+      </div>
+    </div>`;
+  renderSaleItems();
+}
+async function editSale(id){
+  const r = await api('accGetSaleDetails', {id});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector('[data-tab="sale-new"]'); if(btn) btn.classList.add('active');
+  currentTab='sale-new';
+  const root=document.getElementById('viewRoot');
+  await loadSaleNew(root, r.sale);
+}
+function pickSaleCustomer(){
+  const sel=document.getElementById('s_customer'); const opt=sel.selectedOptions[0];
+  if(opt && opt.value){
+    document.getElementById('s_name').value = opt.textContent;
+    document.getElementById('s_phone').value = opt.dataset.phone||'';
+    document.getElementById('s_address').value = opt.dataset.address||'';
+  }
+}
+function renderSaleItems(){
+  const wrap=document.getElementById('saleItemsWrap');
+  wrap.innerHTML = saleItems.map((it,i)=>`
+    <div class="item-row">
+      <input list="prodList" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickSaleProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="saleItems[${i}].qty=Number(this.value)||0; renderSaleTotals();">
+      <select onchange="saleItems[${i}].unit=this.value;">${['','লিটার','কেজি','পিস'].map(u=>`<option value="${u}" ${it.unit===u?'selected':''}>${u||'একক বাছুন'}</option>`).join('')}</select>
+      <input type="number" placeholder="দর" value="${it.price}" oninput="saleItems[${i}].price=Number(this.value)||0; renderSaleTotals();">
+      <div>= ৳${money((it.qty||0)*(it.price||0))}</div>
+      <button class="btn danger sm" onclick="removeSaleItem(${i})">✕</button>
+    </div>`).join('') + `<datalist id="prodList">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+  renderSaleTotals();
+}
+function pickSaleProduct(i, name){
+  const p=(window._products||[]).find(x=>x.name===name);
+  saleItems[i].name=name;
+  if(p){ saleItems[i].product_id=p.id; saleItems[i].price=p.sale_price; saleItems[i].unit=p.unit; }
+  renderSaleItems();
+}
+function addSaleItemRow(){ saleItems.push({name:'',qty:1,price:0,product_id:'',unit:''}); renderSaleItems(); }
+function removeSaleItem(i){ saleItems.splice(i,1); if(!saleItems.length) saleItems=[{name:'',qty:1,price:0,product_id:'',unit:''}]; renderSaleItems(); }
+function renderSaleTotals(){
+  const subtotal = saleItems.reduce((s,it)=>s+(Number(it.qty)||0)*(Number(it.price)||0),0);
+  const discount = Number(document.getElementById('s_discount')?.value)||0;
+  const total = subtotal-discount;
+  const paid = Number(document.getElementById('s_paid')?.value)||0;
+  const due = total-paid;
+  const box=document.getElementById('saleTotalsBox');
+  if(box) box.innerHTML = `<div class="tr"><span>সাবটোটাল</span><span>৳${money(subtotal)}</span></div>
+    <div class="tr"><span>ডিসকাউন্ট</span><span>৳${money(discount)}</span></div>
+    <div class="tr grand"><span>মোট</span><span>৳${money(total)}</span></div>
+    <div class="tr"><span>বাকি</span><span>৳${money(due)}</span></div>`;
+}
+async function submitSale(){
+  const items = saleItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const payload = {
+    date: document.getElementById('s_date').value,
+    customer_id: document.getElementById('s_customer').value,
+    customer_name: document.getElementById('s_name').value.trim() || 'ওয়াক-ইন কাস্টমার',
+    phone: document.getElementById('s_phone').value.trim(),
+    address: document.getElementById('s_address').value.trim(),
+    payment_method: document.getElementById('s_pm').value,
+    discount: Number(document.getElementById('s_discount').value)||0,
+    paid: Number(document.getElementById('s_paid').value)||0,
+    note: document.getElementById('s_note').value.trim(),
+    courier: document.getElementById('s_courier').value.trim(),
+    ctn: Number(document.getElementById('s_ctn').value)||0,
+    fare: Number(document.getElementById('s_fare').value)||0,
+    cod: Number(document.getElementById('s_cod').value)||0,
+    items: items.map(it=>({product_id:it.product_id,name:it.name,qty:it.qty,price:it.price,unit:it.unit||''}))
+  };
+  const isEdit = !!editingSaleId;
+  if(isEdit) payload.id = editingSaleId;
+  const r = await api(isEdit?'accUpdateSale':'accCreateSale', payload);
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  editingSaleId = null;
+  toast(isEdit ? 'ইনভয়েস আপডেট হয়েছে: '+r.invoice_no : 'ইনভয়েস তৈরি হয়েছে: '+r.invoice_no);
+  await printInvoice(r.id);
+  loadTab('sale-list'); document.querySelector('[data-tab="sale-list"]').click();
+}
+
+/* ================= বিক্রয় তালিকা + প্রিন্ট ================= */
+async function loadSaleList(root){
+  root.innerHTML = `<div class="card"><h2>📋 বিক্রয় তালিকা</h2>
+    <div class="search-bar">
+      <input id="sl_q" placeholder="ইনভয়েস/নাম/মোবাইল খুঁজুন" oninput="searchSales()">
+      <input id="sl_from" type="date"> <input id="sl_to" type="date">
+      <button class="btn ghost sm" onclick="searchSales()">ফিল্টার</button>
+      <button class="btn gold sm" onclick="syncMissingOrders()">🔄 পুরাতন অর্ডার সিংক</button>
+    </div>
+    <div id="saleListTbl"></div></div>`;
+  await searchSales();
+}
+// ওয়েবসাইটের যেসব পুরনো অর্ডার অটো-অ্যাকাউন্টিং চালুর আগে এসেছিল বা কোনো কারণে
+// বিক্রয় তালিকায় যোগ হয়নি, সেগুলো এই বাটনে চেক করে একসাথে যোগ করে দেওয়া হয়।
+// আগে থেকেই তালিকায় থাকা অর্ডার (order_ref মিলিয়ে) বা বাতিল অর্ডার স্বয়ংক্রিয়ভাবে বাদ যায়।
+async function syncMissingOrders(){
+  if(!confirm('বর্তমান সব অর্ডার চেক করে যেগুলো এখনো বিক্রয় তালিকায় যোগ হয়নি সেগুলো এখন যোগ করা হবে। এগিয়ে যাবেন?')) return;
+  toast('অর্ডার চেক করে সিংক করা হচ্ছে...');
+  const r = await api('accSyncMissingOrders', {});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  let msg = `✅ ${r.added}টি অর্ডার বিক্রয় তালিকায় যোগ হয়েছে (আগে থেকেই ছিল/বাতিল: ${r.skipped})`;
+  if(r.failed) msg += `, ⚠️ ব্যর্থ: ${r.failed}`;
+  toast(msg);
+  if(r.failed && r.errors && r.errors.length) console.warn('সিংক ত্রুটি:', r.errors);
+  loadTab('sale-list');
+}
+async function searchSales(){
+  const r = await api('accGetSales', {query:document.getElementById('sl_q').value, from:document.getElementById('sl_from').value, to:document.getElementById('sl_to').value});
+  const list=r.sales||[];
+  document.getElementById('saleListTbl').innerHTML = tableHTML([
+    {label:'ইনভয়েস', key:'invoice_no'}, {label:'তারিখ', key:'date'}, {label:'গ্রাহক', key:'customer_name'},
+    {label:'মোট', render:s=>'৳'+money(s.total)}, {label:'পরিশোধ', render:s=>'৳'+money(s.paid)},
+    {label:'বাকি', render:s=>'৳'+money(s.due)},
+    {label:'স্ট্যাটাস', render:s=>`<span class="tag ${s.due<=0?'ok':(s.paid>0?'mid':'warn')}">${esc(s.status)}</span>`},
+    {label:'', render:s=>`<button class="btn ghost sm" onclick="printInvoice('${s.id}')">🖨️</button> <button class="btn ghost sm" onclick="editSale('${s.id}')">✏️</button> ${s.due>0?`<button class="btn ghost sm" onclick="collectDue('${s.id}')">৳ আদায়</button>`:''} <button class="btn danger sm" onclick="deleteSale('${s.id}')">🗑️</button>`}
+  ], list);
+}
+function collectDue(id){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">বাকি আদায়</h2>
+    <div class="field"><label>পরিমাণ</label><input id="cd_amount" type="number"></div>
+    <div class="field"><label>মাধ্যম</label><select id="cd_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    <button class="btn gold" style="width:100%;" onclick="doCollectDue('${id}')">সংরক্ষণ করুন</button>`);
+}
+async function doCollectDue(id){
+  const amount=Number(document.getElementById('cd_amount').value)||0;
+  const payment_method=document.getElementById('cd_pm').value;
+  const r=await api('accUpdateSalePayment',{id,amount,payment_method});
+  if(r.ok){ closeModal(); toast('আদায় সংরক্ষিত হয়েছে'); loadTab('sale-list'); } else toast(r.error);
+}
+async function deleteSale(id){
+  if(!confirm('এই ইনভয়েস মুছে ফেলতে চান? (স্টক ফেরত যাবে)')) return;
+  const r=await api('accDeleteSale',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('sale-list'); } else toast(r.error);
+}
+async function printInvoice(id){
+  const r = await api('accGetSaleDetails', {id});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  const s=r.sale, shop=r.shop;
+  // পুরনো ইনভয়েসে item.unit না থাকলে প্রোডাক্ট লিস্ট থেকে একক খুঁজে নেওয়া হয়
+  if(!window._products){ const pr = await api('accGetProducts',{}); window._products = pr.products||[]; }
+  const bnNorm = s => String(s||'').normalize('NFC').replace(/[\u200B\u200C\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+  const unitOf = it => {
+    if (it.unit) return it.unit;
+    const byId = (window._products||[]).find(p=>String(p.id)===String(it.product_id));
+    if (byId && byId.unit) return byId.unit;
+    const nm = bnNorm(it.name);
+    let byName = (window._products||[]).find(p=>bnNorm(p.name)===nm);
+    const baseName = nm.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!byName && baseName) byName = (window._products||[]).find(p=>bnNorm(p.name)===baseName);
+    if (!byName) {
+      const needle = baseName || nm;
+      byName = (window._products||[]).find(p=>{ const pn=bnNorm(p.name); return pn && (pn.indexOf(needle)!==-1 || needle.indexOf(pn)!==-1); });
+    }
+    return (byName && byName.unit) ? byName.unit : '';
+  };
+
+  // শুধু যতগুলো পণ্য আছে ততগুলো সারি — অতিরিক্ত খালি ঘর নেই
+  const rowsHtml = s.items.map((it,i)=>`<tr>
+      <td class="c-no">${i+1}</td>
+      <td class="c-desc">${esc(it.name)}</td>
+      <td class="c-qty">${money(it.qty)}</td>
+      <td class="c-unit">${esc(unitOf(it))}</td>
+      <td class="c-price">${money(it.price)}</td>
+      <td class="c-amt">${money(it.qty*it.price)}</td>
+    </tr>`).join('');
+
+  const tpl = shop.invoice_template || 'classic';
+  const color = shop.invoice_color || '#1F5F3F';
+  const logoSrc = shop.invoice_logo_url || DEFAULT_INVOICE_LOGO;
+  const wordsHtml = shop.invoice_show_words===false ? '' : `<span>কথায়: ${bnAmountInWords(s.total)}</span>`;
+  const termsHtml = shop.invoice_terms ? `<div class="inv-terms">${esc(shop.invoice_terms)}</div>` : '';
+  const footNoteHtml = shop.invoice_footer_note ? `<div class="inv-footnote">${esc(shop.invoice_footer_note)}</div>` : '';
+  const sigHtml = shop.invoice_show_signature===false ? '' : `<div class="inv-foot2"><span>ক্রেতার স্বাক্ষর: .......................</span><span>বিক্রেতার স্বাক্ষর: .............</span></div>`;
+  const courierHtml = `<table class="inv-courier">
+      <tr><td>Courier: ${esc(s.courier||'')}</td></tr>
+      <tr><td>CTN: ${money(s.ctn||0)}</td></tr>
+      <tr><td>Delivery Fare: ${money(s.fare||0)}</td></tr>
+      <tr><td>COD: ${money(s.cod||0)}</td></tr>
+    </table>`;
+
+  document.getElementById('invoicePrint').innerHTML = `
+    <div class="inv-box tpl-${esc(tpl)}" style="--inv-color:${esc(color)};">
+      <img class="inv-watermark" src="${esc(logoSrc)}" alt="">
+      <div class="inv-head2">
+        <div class="inv-head-left">
+          <img class="inv-logo2" src="${esc(logoSrc)}" alt="logo">
+          <div>
+            <div class="inv-shop-bn">${esc(shop.shop_name_bn)}</div>
+            <div class="inv-shop-en">${esc(shop.shop_name_en)}</div>
+            <div class="inv-shop-line">${esc(shop.address)}</div>
+            <div class="inv-shop-line">${esc(shop.phone)}</div>
+          </div>
+        </div>
+        <div class="inv-head-right">
+          <div class="cash-memo-box">Sales Invoice</div>
+          ${shop.fb ? `<div class="inv-contact-line">${esc(shop.fb)}</div>` : ''}
+          ${shop.email ? `<div class="inv-contact-line">📧 ${esc(shop.email)}</div>` : ''}
+          ${shop.website ? `<div class="inv-contact-line">🌐 ${esc(shop.website)}</div>` : ''}
+        </div>
+      </div>
+      <div class="inv-meta-flex">
+        <table class="inv-meta-left">
+          <tr><td class="lbl">নাম:</td><td class="val">${esc(s.customer_name)}</td></tr>
+          <tr><td class="lbl">ঠিকানা:</td><td class="val">${esc(s.address)}</td></tr>
+          <tr><td class="lbl">মোবা:</td><td class="val">${esc(s.phone)}</td></tr>
+        </table>
+        <div class="inv-meta-right">
+          <div class="row"><span class="lbl">চালান নং:</span><span class="val">${esc(s.invoice_no)}</span></div>
+          <div class="row"><span class="lbl">তারিখ:</span><span class="val">${esc(s.date)}</span></div>
+        </div>
+      </div>
+      <div class="inv-tbl-wrap">
+        <table class="inv-tbl">
+          <thead><tr><th>নং</th><th>বিবরণ</th><th>পরিমান</th><th>একক</th><th>দর</th><th>টাকা</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="inv-summary-flex">
+        <div class="inv-words">${wordsHtml}</div>
+        <table class="inv-totals">
+          <tr class="grand"><td>মোট</td><td>৳${money(s.total)}</td></tr>
+          <tr class="paid"><td>পরিশোধ (Paid)</td><td>৳${money(s.paid)}</td></tr>
+          <tr class="due"><td>বাকি (Due)</td><td>৳${money(s.due)}</td></tr>
+        </table>
+      </div>
+      ${courierHtml}
+      ${termsHtml}
+      ${sigHtml}
+      ${footNoteHtml}
+    </div>`;
+
+  // প্রিন্ট/PDF সেভ করার সময় ফাইলের নাম যেন ইনভয়েস নং হয় (ব্রাউজার document.title থেকে ডিফল্ট ফাইলনেম নেয়)
+  const oldTitle = document.title;
+  document.title = s.invoice_no || oldTitle;
+  const restoreTitle = () => { document.title = oldTitle; window.removeEventListener('afterprint', restoreTitle); };
+  window.addEventListener('afterprint', restoreTitle);
+  window.print();
+}
+
+// ক্রয় ইনভয়েস প্রিন্ট — বিক্রয় ইনভয়েসের মতোই দেখতে, তবে হেডারে "Purchase Invoice",
+// নামের জায়গায় সরবরাহকারীর নাম।
+async function printPurchaseInvoice(id){
+  const r = await api('accGetPurchaseDetails', {id});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  const p=r.purchase, shop=r.shop;
+  if(!window._products){ const pr = await api('accGetProducts',{}); window._products = pr.products||[]; }
+  const bnNorm = s => String(s||'').normalize('NFC').replace(/[\u200B\u200C\u200D\uFEFF]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+  const unitOf = it => {
+    if (it.unit) return it.unit;
+    const byId = (window._products||[]).find(pd=>String(pd.id)===String(it.product_id));
+    if (byId && byId.unit) return byId.unit;
+    const nm = bnNorm(it.name);
+    let byName = (window._products||[]).find(pd=>bnNorm(pd.name)===nm);
+    const baseName = nm.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    if (!byName && baseName) byName = (window._products||[]).find(pd=>bnNorm(pd.name)===baseName);
+    if (!byName) {
+      const needle = baseName || nm;
+      byName = (window._products||[]).find(pd=>{ const pn=bnNorm(pd.name); return pn && (pn.indexOf(needle)!==-1 || needle.indexOf(pn)!==-1); });
+    }
+    return (byName && byName.unit) ? byName.unit : '';
+  };
+
+  const rowsHtml = p.items.map((it,i)=>`<tr>
+      <td class="c-no">${i+1}</td>
+      <td class="c-desc">${esc(it.name)}</td>
+      <td class="c-qty">${money(it.qty)}</td>
+      <td class="c-unit">${esc(unitOf(it))}</td>
+      <td class="c-price">${money(it.price)}</td>
+      <td class="c-amt">${money(it.qty*it.price)}</td>
+    </tr>`).join('');
+
+  const tpl = shop.invoice_template || 'classic';
+  const color = shop.invoice_color || '#1F5F3F';
+  const logoSrc = shop.invoice_logo_url || DEFAULT_INVOICE_LOGO;
+  const wordsHtml = shop.invoice_show_words===false ? '' : `<span>কথায়: ${bnAmountInWords(p.total)}</span>`;
+  const termsHtml = shop.invoice_terms ? `<div class="inv-terms">${esc(shop.invoice_terms)}</div>` : '';
+  const footNoteHtml = shop.invoice_footer_note ? `<div class="inv-footnote">${esc(shop.invoice_footer_note)}</div>` : '';
+  const sigHtml = shop.invoice_show_signature===false ? '' : `<div class="inv-foot2"><span>ক্রেতার স্বাক্ষর: .......................</span><span>সরবরাহকারীর স্বাক্ষর: .............</span></div>`;
+
+  document.getElementById('invoicePrint').innerHTML = `
+    <div class="inv-box tpl-${esc(tpl)}" style="--inv-color:${esc(color)};">
+      <img class="inv-watermark" src="${esc(logoSrc)}" alt="">
+      <div class="inv-head2">
+        <div class="inv-head-left">
+          <img class="inv-logo2" src="${esc(logoSrc)}" alt="logo">
+          <div>
+            <div class="inv-shop-bn">${esc(shop.shop_name_bn)}</div>
+            <div class="inv-shop-en">${esc(shop.shop_name_en)}</div>
+            <div class="inv-shop-line">${esc(shop.address)}</div>
+            <div class="inv-shop-line">${esc(shop.phone)}</div>
+          </div>
+        </div>
+        <div class="inv-head-right">
+          <div class="cash-memo-box">Purchase Invoice</div>
+          ${shop.fb ? `<div class="inv-contact-line">${esc(shop.fb)}</div>` : ''}
+          ${shop.email ? `<div class="inv-contact-line">📧 ${esc(shop.email)}</div>` : ''}
+          ${shop.website ? `<div class="inv-contact-line">🌐 ${esc(shop.website)}</div>` : ''}
+        </div>
+      </div>
+      <div class="inv-meta-flex">
+        <table class="inv-meta-left">
+          <tr><td class="lbl">নাম:</td><td class="val">${esc(p.supplier_name)}</td></tr>
+          <tr><td class="lbl">ঠিকানা:</td><td class="val">${esc(p.address||'')}</td></tr>
+          <tr><td class="lbl">মোবা:</td><td class="val">${esc(p.phone||'')}</td></tr>
+        </table>
+        <div class="inv-meta-right">
+          <div class="row"><span class="lbl">চালান নং:</span><span class="val">${esc(p.purchase_no)}</span></div>
+          <div class="row"><span class="lbl">তারিখ:</span><span class="val">${esc(p.date)}</span></div>
+        </div>
+      </div>
+      <div class="inv-tbl-wrap">
+        <table class="inv-tbl">
+          <thead><tr><th>নং</th><th>বিবরণ</th><th>পরিমান</th><th>একক</th><th>দর</th><th>টাকা</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="inv-summary-flex">
+        <div class="inv-words">${wordsHtml}</div>
+        <table class="inv-totals">
+          <tr class="grand"><td>মোট</td><td>৳${money(p.total)}</td></tr>
+          <tr class="paid"><td>পরিশোধ (Paid)</td><td>৳${money(p.paid)}</td></tr>
+          <tr class="due"><td>বাকি (Due)</td><td>৳${money(p.due)}</td></tr>
+        </table>
+      </div>
+      ${termsHtml}
+      ${sigHtml}
+      ${footNoteHtml}
+    </div>`;
+
+  const oldTitle = document.title;
+  document.title = p.purchase_no || oldTitle;
+  const restoreTitle = () => { document.title = oldTitle; window.removeEventListener('afterprint', restoreTitle); };
+  window.addEventListener('afterprint', restoreTitle);
+  window.print();
+}
+
+/* ================= বিক্রয় ফেরত ================= */
+let returnItems=[];
+async function loadSaleReturn(root){
+  const prodRes = await api('accGetProducts',{}); window._products = prodRes.products||[];
+  returnItems=[{name:'',qty:1,price:0,product_id:''}];
+  root.innerHTML = `<div class="card"><h2>↩️ বিক্রয় ফেরত</h2>
+    <div class="row2">
+      <div class="field"><label>ইনভয়েস নং</label><input id="sr_invoice"></div>
+      <div class="field"><label>গ্রাহকের নাম</label><input id="sr_customer"></div>
+    </div>
+    <div id="srItemsWrap"></div>
+    <button class="btn ghost sm" onclick="addReturnItemRow()">+ আরেকটি লাইন</button>
+    <div class="field" style="margin-top:10px;"><label>কারণ</label><input id="sr_reason"></div>
+    <button class="btn gold" style="width:100%;" onclick="submitSaleReturn()">✅ ফেরত সংরক্ষণ করুন</button>
+    </div>
+    <div class="card"><h2>ফেরতের ইতিহাস</h2><div id="srHistory"></div></div>`;
+  renderReturnItems();
+  const hist = await api('accGetSalesReturns', {});
+  document.getElementById('srHistory').innerHTML = tableHTML([
+    {label:'তারিখ', key:'date'}, {label:'ইনভয়েস', key:'invoice_no'}, {label:'গ্রাহক', key:'customer_name'},
+    {label:'মোট', render:x=>'৳'+money(x.total)}, {label:'কারণ', key:'reason'}
+  ], hist.returns||[]);
+}
+function renderReturnItems(){
+  const wrap=document.getElementById('srItemsWrap');
+  wrap.innerHTML = returnItems.map((it,i)=>`
+    <div class="item-row no-unit">
+      <input list="prodList2" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickReturnProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="returnItems[${i}].qty=Number(this.value)||0;">
+      <input type="number" placeholder="দর" value="${it.price}" oninput="returnItems[${i}].price=Number(this.value)||0;">
+      <div></div>
+      <button class="btn danger sm" onclick="returnItems.splice(${i},1); renderReturnItems();">✕</button>
+    </div>`).join('') + `<datalist id="prodList2">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+}
+function pickReturnProduct(i,name){ const p=(window._products||[]).find(x=>x.name===name); returnItems[i].name=name; if(p){returnItems[i].product_id=p.id; returnItems[i].price=p.sale_price;} renderReturnItems(); }
+function addReturnItemRow(){ returnItems.push({name:'',qty:1,price:0,product_id:''}); renderReturnItems(); }
+async function submitSaleReturn(){
+  const items=returnItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const r = await api('accCreateSalesReturn', {invoice_no:document.getElementById('sr_invoice').value.trim(), customer_name:document.getElementById('sr_customer').value.trim(), reason:document.getElementById('sr_reason').value.trim(), items});
+  if(r.ok){ toast('ফেরত সংরক্ষিত হয়েছে'); loadTab('sale-return'); } else toast(r.error);
+}
+
+/* ================= নতুন ক্রয় / এডিট ================= */
+let purchaseItems=[];
+let editingPurchaseId=null; // এডিট মোডে থাকলে এই ক্রয়ের id, নাহলে null (নতুন ক্রয়)
+async function loadPurchaseNew(root, prefill){
+  const [prodRes, supRes] = await Promise.all([api('accGetProducts',{}), api('accGetSuppliers',{})]);
+  window._products=prodRes.products||[]; window._suppliers=supRes.suppliers||[];
+  editingPurchaseId = prefill ? prefill.id : null;
+  purchaseItems = prefill && prefill.items && prefill.items.length
+    ? prefill.items.map(it=>({name:it.name||'', qty:it.qty||1, price:it.price||0, product_id:it.product_id||''}))
+    : [{name:'',qty:1,price:0,product_id:''}];
+  root.innerHTML = `<div class="card"><h2>${prefill?'✏️ ক্রয় এডিট — '+esc(prefill.purchase_no):'🛒 নতুন ক্রয়'}</h2>
+    <div class="row3">
+      <div class="field"><label>তারিখ</label><input id="p_date" type="date" value="${prefill?esc(prefill.date):new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>সরবরাহকারী</label><select id="p_supplier">${window._suppliers.map(s=>`<option value="${s.id}" ${prefill && String(prefill.supplier_id)===String(s.id)?'selected':''}>${esc(s.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>পেমেন্ট মাধ্যম</label><select id="p_pm">${['নগদ','বিকাশ','নগদ (Nagad)','রকেট','ব্যাংক','বাকি'].map(pm=>`<option ${prefill && prefill.payment_method===pm?'selected':''}>${pm}</option>`).join('')}</select></div>
+    </div>
+    <div id="purchItemsWrap"></div>
+    <button class="btn ghost sm" onclick="addPurchaseItemRow()">+ আরেকটি লাইন</button>
+    <div class="totals-box" id="purchTotalsBox"></div>
+    <div class="row2" style="margin-top:10px;">
+      <div class="field"><label>ডিসকাউন্ট</label><input id="p_discount" type="number" value="${prefill?prefill.discount||0:0}" oninput="renderPurchaseTotals()"></div>
+      <div class="field"><label>পরিশোধ (Paid)</label><input id="p_paid" type="number" value="${prefill?prefill.paid||0:0}" oninput="renderPurchaseTotals()"></div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn gold" style="flex:1;" onclick="submitPurchase()">${prefill?'✅ পরিবর্তন সংরক্ষণ করুন':'✅ ক্রয় সংরক্ষণ করুন'}</button>
+      ${prefill?`<button class="btn ghost" onclick="loadTab('purchase-list'); document.querySelector('[data-tab=\\'purchase-list\\']').click();">বাতিল</button>`:''}
+    </div>
+    </div>`;
+  renderPurchaseItems();
+}
+async function editPurchase(id){
+  const r = await api('accGetPurchaseDetails', {id});
+  if(!r.ok){ toast(r.error||'ত্রুটি'); return; }
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector('[data-tab="purchase-new"]'); if(btn) btn.classList.add('active');
+  currentTab='purchase-new';
+  const root=document.getElementById('viewRoot');
+  await loadPurchaseNew(root, r.purchase);
+}
+function renderPurchaseItems(){
+  const wrap=document.getElementById('purchItemsWrap');
+  wrap.innerHTML = purchaseItems.map((it,i)=>`
+    <div class="item-row no-unit">
+      <input list="prodList3" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickPurchaseProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="purchaseItems[${i}].qty=Number(this.value)||0; renderPurchaseTotals();">
+      <input type="number" placeholder="দর" value="${it.price}" oninput="purchaseItems[${i}].price=Number(this.value)||0; renderPurchaseTotals();">
+      <div>= ৳${money((it.qty||0)*(it.price||0))}</div>
+      <button class="btn danger sm" onclick="purchaseItems.splice(${i},1); if(!purchaseItems.length) purchaseItems=[{name:'',qty:1,price:0,product_id:''}]; renderPurchaseItems();">✕</button>
+    </div>`).join('') + `<datalist id="prodList3">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+  renderPurchaseTotals();
+}
+function pickPurchaseProduct(i,name){ const p=(window._products||[]).find(x=>x.name===name); purchaseItems[i].name=name; if(p){purchaseItems[i].product_id=p.id; purchaseItems[i].price=p.cost_price;} renderPurchaseItems(); }
+function addPurchaseItemRow(){ purchaseItems.push({name:'',qty:1,price:0,product_id:''}); renderPurchaseItems(); }
+function renderPurchaseTotals(){
+  const subtotal=purchaseItems.reduce((s,it)=>s+(Number(it.qty)||0)*(Number(it.price)||0),0);
+  const discount=Number(document.getElementById('p_discount')?.value)||0;
+  const total=subtotal-discount; const paid=Number(document.getElementById('p_paid')?.value)||0; const due=total-paid;
+  const box=document.getElementById('purchTotalsBox');
+  if(box) box.innerHTML=`<div class="tr"><span>সাবটোটাল</span><span>৳${money(subtotal)}</span></div><div class="tr"><span>ডিসকাউন্ট</span><span>৳${money(discount)}</span></div><div class="tr grand"><span>মোট</span><span>৳${money(total)}</span></div><div class="tr"><span>বাকি</span><span>৳${money(due)}</span></div>`;
+}
+async function submitPurchase(){
+  const items=purchaseItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const sel=document.getElementById('p_supplier'); const supOpt=sel.selectedOptions[0];
+  const payload={ date:document.getElementById('p_date').value, supplier_id:sel.value, supplier_name:supOpt?supOpt.textContent:'',
+    payment_method:document.getElementById('p_pm').value, discount:Number(document.getElementById('p_discount').value)||0,
+    paid:Number(document.getElementById('p_paid').value)||0, items:items.map(it=>({product_id:it.product_id,name:it.name,qty:it.qty,price:it.price})) };
+  const isEdit = !!editingPurchaseId;
+  if(isEdit) payload.id = editingPurchaseId;
+  const r=await api(isEdit?'accUpdatePurchase':'accCreatePurchase', payload);
+  if(!r.ok){ toast(r.error); return; }
+  editingPurchaseId = null;
+  toast(isEdit ? 'ক্রয় আপডেট হয়েছে: '+r.purchase_no : 'ক্রয় সংরক্ষিত হয়েছে: '+r.purchase_no);
+  await printPurchaseInvoice(r.id);
+  loadTab('purchase-list'); document.querySelector('[data-tab="purchase-list"]').click();
+}
+
+/* ================= ক্রয় তালিকা ================= */
+async function loadPurchaseList(root){
+  const r = await api('accGetPurchases', {});
+  const list=r.purchases||[];
+  root.innerHTML = `<div class="card"><h2>📋 ক্রয় তালিকা</h2>
+    ${tableHTML([
+      {label:'ক্রয় নং', key:'purchase_no'}, {label:'তারিখ', key:'date'}, {label:'সরবরাহকারী', key:'supplier_name'},
+      {label:'মোট', render:p=>'৳'+money(p.total)}, {label:'পরিশোধ', render:p=>'৳'+money(p.paid)}, {label:'বাকি', render:p=>'৳'+money(p.due)},
+      {label:'স্ট্যাটাস', render:p=>`<span class="tag ${p.due<=0?'ok':(p.paid>0?'mid':'warn')}">${esc(p.status)}</span>`},
+      {label:'', render:p=>`<button class="btn ghost sm" onclick="printPurchaseInvoice('${p.id}')">🖨️</button> <button class="btn ghost sm" onclick="editPurchase('${p.id}')">✏️</button> ${p.due>0?`<button class="btn ghost sm" onclick="payPurchaseDue('${p.id}')">৳ পরিশোধ</button>`:''} <button class="btn danger sm" onclick="deletePurchase('${p.id}')">🗑️</button>`}
+    ], list)}
+    </div>`;
+}
+function payPurchaseDue(id){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">বাকি পরিশোধ</h2>
+    <div class="field"><label>পরিমাণ</label><input id="pp_amount" type="number"></div>
+    <div class="field"><label>মাধ্যম</label><select id="pp_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    <button class="btn gold" style="width:100%;" onclick="doPayPurchaseDue('${id}')">সংরক্ষণ করুন</button>`);
+}
+async function doPayPurchaseDue(id){
+  const amount=Number(document.getElementById('pp_amount').value)||0; const payment_method=document.getElementById('pp_pm').value;
+  const r=await api('accUpdatePurchasePayment',{id,amount,payment_method});
+  if(r.ok){ closeModal(); toast('পরিশোধ সংরক্ষিত হয়েছে'); loadTab('purchase-list'); } else toast(r.error);
+}
+async function deletePurchase(id){
+  if(!confirm('মুছে ফেলতে চান? (স্টক কমে যাবে)')) return;
+  const r=await api('accDeletePurchase',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('purchase-list'); } else toast(r.error);
+}
+
+/* ================= ক্রয় ফেরত ================= */
+let purReturnItems=[];
+async function loadPurchaseReturn(root){
+  const prodRes=await api('accGetProducts',{}); window._products=prodRes.products||[];
+  purReturnItems=[{name:'',qty:1,price:0,product_id:''}];
+  root.innerHTML = `<div class="card"><h2>↩️ ক্রয় ফেরত</h2>
+    <div class="row2">
+      <div class="field"><label>ক্রয় নং</label><input id="pr_no"></div>
+      <div class="field"><label>সরবরাহকারীর নাম</label><input id="pr_supplier"></div>
+    </div>
+    <div id="prItemsWrap"></div>
+    <button class="btn ghost sm" onclick="addPurReturnRow()">+ আরেকটি লাইন</button>
+    <div class="field" style="margin-top:10px;"><label>কারণ</label><input id="pr_reason"></div>
+    <button class="btn gold" style="width:100%;" onclick="submitPurchaseReturn()">✅ ফেরত সংরক্ষণ করুন</button></div>
+    <div class="card"><h2>ফেরতের ইতিহাস</h2><div id="prHistory"></div></div>`;
+  renderPurReturnItems();
+  const hist=await api('accGetPurchaseReturns',{});
+  document.getElementById('prHistory').innerHTML = tableHTML([
+    {label:'তারিখ', key:'date'}, {label:'ক্রয় নং', key:'purchase_no'}, {label:'সরবরাহকারী', key:'supplier_name'},
+    {label:'মোট', render:x=>'৳'+money(x.total)}, {label:'কারণ', key:'reason'}
+  ], hist.returns||[]);
+}
+function renderPurReturnItems(){
+  const wrap=document.getElementById('prItemsWrap');
+  wrap.innerHTML = purReturnItems.map((it,i)=>`
+    <div class="item-row no-unit">
+      <input list="prodList4" placeholder="পণ্যের নাম" value="${esc(it.name)}" onchange="pickPurReturnProduct(${i}, this.value)">
+      <input type="number" placeholder="পরিমাণ" value="${it.qty}" oninput="purReturnItems[${i}].qty=Number(this.value)||0;">
+      <input type="number" placeholder="দর" value="${it.price}" oninput="purReturnItems[${i}].price=Number(this.value)||0;">
+      <div></div>
+      <button class="btn danger sm" onclick="purReturnItems.splice(${i},1); renderPurReturnItems();">✕</button>
+    </div>`).join('') + `<datalist id="prodList4">${(window._products||[]).map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist>`;
+}
+function pickPurReturnProduct(i,name){ const p=(window._products||[]).find(x=>x.name===name); purReturnItems[i].name=name; if(p){purReturnItems[i].product_id=p.id; purReturnItems[i].price=p.cost_price;} renderPurReturnItems(); }
+function addPurReturnRow(){ purReturnItems.push({name:'',qty:1,price:0,product_id:''}); renderPurReturnItems(); }
+async function submitPurchaseReturn(){
+  const items=purReturnItems.filter(it=>it.name && it.qty);
+  if(!items.length){ toast('অন্তত একটা পণ্য যোগ করুন'); return; }
+  const r=await api('accCreatePurchaseReturn', {purchase_no:document.getElementById('pr_no').value.trim(), supplier_name:document.getElementById('pr_supplier').value.trim(), reason:document.getElementById('pr_reason').value.trim(), items});
+  if(r.ok){ toast('ফেরত সংরক্ষিত হয়েছে'); loadTab('purchase-return'); } else toast(r.error);
+}
+
+/* ================= খরচ ================= */
+async function loadExpenses(root){
+  const listsRes = await api('accGetLists',{});
+  window._expHeads = (listsRes.lists&&listsRes.lists.expense_head)||[];
+  const r = await api('accGetExpenses', {});
+  root.innerHTML = `<div class="card"><h2>💸 খরচ <button class="btn gold sm" onclick="openExpenseForm()">+ নতুন খরচ</button></h2>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'খাত', key:'head'}, {label:'বিবরণ', key:'description'},
+      {label:'পরিমাণ', render:e=>'৳'+money(e.amount)}, {label:'মাধ্যম', key:'payment_method'},
+      {label:'', render:e=>`<button class="btn danger sm" onclick="deleteExpense('${e.id}')">🗑️</button>`}
+    ], r.expenses||[])}
+    </div>`;
+}
+function openExpenseForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন খরচ</h2>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="ex_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>খাত</label><select id="ex_head">${window._expHeads.map(h=>`<option>${esc(h)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>বিবরণ</label><input id="ex_desc"></div>
+    <div class="row2">
+      <div class="field"><label>পরিমাণ</label><input id="ex_amount" type="number"></div>
+      <div class="field"><label>মাধ্যম</label><select id="ex_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveExpense()">সংরক্ষণ করুন</button>`);
+}
+async function saveExpense(){
+  const payload={ date:document.getElementById('ex_date').value, head:document.getElementById('ex_head').value, description:document.getElementById('ex_desc').value.trim(), amount:Number(document.getElementById('ex_amount').value)||0, payment_method:document.getElementById('ex_pm').value };
+  const r = await api('accAddExpense', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('expenses'); } else toast(r.error);
+}
+async function deleteExpense(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r=await api('accDeleteExpense',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('expenses'); } else toast(r.error);
+}
+
+/* ================= ক্যাশ ও ব্যাংক ================= */
+async function loadCashBank(root){
+  const [bal, txns] = await Promise.all([api('accGetCashBankBalance',{}), api('accGetCashBankTxns',{})]);
+  window._bankName = bal.bank_name||'ব্যাংক হিসাব';
+  const wallets = bal.wallets || [];
+  root.innerHTML = `
+    <div class="stat-grid">
+      ${wallets.map(w=>`<div class="stat"><div class="lbl">${esc(w.label)}</div><div class="val">৳${money(w.balance)}</div></div>`).join('')}
+      <div class="stat"><div class="lbl">সর্বমোট</div><div class="val">৳${money(bal.total)}</div></div>
+    </div>
+    <div class="card"><h2>🏦 লেনদেন <button class="btn gold sm" onclick="openCashBankForm()">+ নতুন লেনদেন</button></h2>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'হিসাব', key:'account_name'},
+      {label:'ধরন', render:t=>t.type==='in'?'<span class="tag ok">জমা</span>':'<span class="tag warn">উত্তোলন</span>'},
+      {label:'খাত', key:'category'}, {label:'বিবরণ', key:'description'}, {label:'পরিমাণ', render:t=>'৳'+money(t.amount)}
+    ], txns.txns||[])}
+    </div>`;
+}
+function openCashBankForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন লেনদেন</h2>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="cb_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>হিসাব (ওয়ালেট)</label><select id="cb_account"><option>নগদ (ক্যাশ)</option><option>${esc(window._bankName)}</option><option>বিকাশ (bKash)</option><option>নগদ (Nagad)</option><option>রকেট (Rocket)</option></select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ধরন</label><select id="cb_type"><option value="in">জমা (আয়)</option><option value="out">উত্তোলন (ব্যয়)</option></select></div>
+      <div class="field"><label>পরিমাণ</label><input id="cb_amount" type="number"></div>
+    </div>
+    <div class="field"><label>খাত (যেমন: মালিকের বিনিয়োগ, বিবিধ আয়)</label><input id="cb_category"></div>
+    <div class="field"><label>বিবরণ</label><input id="cb_desc"></div>
+    <button class="btn gold" style="width:100%;" onclick="saveCashBank()">সংরক্ষণ করুন</button>`);
+}
+async function saveCashBank(){
+  const payload={ date:document.getElementById('cb_date').value, account_name:document.getElementById('cb_account').value, type:document.getElementById('cb_type').value, amount:Number(document.getElementById('cb_amount').value)||0, category:document.getElementById('cb_category').value.trim(), description:document.getElementById('cb_desc').value.trim() };
+  const r = await api('accAddCashBankTxn', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('cashbank'); } else toast(r.error);
+}
+
+/* ================= দৈনিক ক্যাশ ক্লোজিং (Cash Denomination) ================= */
+// সূত্র: Expected Cash = Opening Cash + Cash Sales + Customer Collection + Other Income
+//        − Purchase − Expense − Supplier Payment (± সমন্বয়, যদি পার্টনার ক্যাপিটাল/
+//        পেরোলের মতো সূত্রের বাইরের কোনো নগদ লেনদেন থাকে — সাধারণত এটা ০ থাকে)
+const DAY_CLOSING_DENOMS = [1000, 500, 200, 100, 50, 20, 10, 5, 2, 1];
+window._dcDate = window._dcDate || new Date().toISOString().slice(0,10);
+
+async function loadDayClosing(root){
+  root.innerHTML = `<div class="empty">লোড হচ্ছে…</div>`;
+  const date = window._dcDate;
+  const [pv, hist] = await Promise.all([
+    api('accGetDayClosingPreview', {date}),
+    api('accGetDayClosingList', {})
+  ]);
+  if(!pv.ok){ root.innerHTML = `<div class="card">${esc(pv.error)}</div>`; return; }
+  const historyRows = (hist.list||[]).slice(0,10);
+
+  const dateBar = `
+    <div class="card" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div class="field" style="margin-bottom:0;"><label>তারিখ</label><input type="date" id="dc_date" value="${date}" onchange="changeDayClosingDate(this.value)"></div>
+      ${pv.closed ? '<span class="tag ok">✅ এই দিন ক্লোজ করা হয়ে গেছে</span>' : (pv.month_locked ? '<span class="tag warn">🔒 এই মাস ক্লোজ করা — নতুন ক্লোজিং করা যাবে না</span>' : '<span class="tag mid">⏳ এখনো ক্লোজ করা হয়নি</span>')}
+    </div>`;
+
+  let body;
+  if(pv.closed){
+    const r = pv.record;
+    const diffTxt = r.difference===0 ? '<span class="tag ok">✅ মিল আছে</span>' : (r.difference>0 ? `<span class="tag mid">অতিরিক্ত ৳${money(r.difference)}</span>` : `<span class="tag warn">ঘাটতি ৳${money(Math.abs(r.difference))}</span>`);
+    body = `
+      <div class="card">
+        <h2>🧮 দিন ক্লোজিং — ${r.date}</h2>
+        ${dayClosingFormulaTable(r)}
+        <div class="stat-grid" style="margin-top:14px;">
+          <div class="stat"><div class="lbl">প্রত্যাশিত নগদ (Expected)</div><div class="val">৳${money(r.expected_cash)}</div></div>
+          <div class="stat"><div class="lbl">প্রকৃত নগদ (গণনা করা)</div><div class="val">৳${money(r.actual_cash)}</div></div>
+          <div class="stat ${r.difference!==0?'warn':''}"><div class="lbl">গরমিল (Difference)</div><div class="val">${diffTxt}</div></div>
+        </div>
+        <h3 style="margin:16px 0 8px; color:var(--forest); font-size:1rem;">নোট/কয়েন হিসাব</h3>
+        ${tableHTML([
+          {label:'মূল্য', render:d=>'৳'+d.value}, {label:'সংখ্যা', key:'count'}, {label:'সমষ্টি', render:d=>'৳'+money(d.value*d.count)}
+        ], (r.denominations||[]).filter(d=>d.count>0))}
+        ${r.note ? `<p class="muted" style="margin-top:10px;">📝 ${esc(r.note)}</p>` : ''}
+        <p class="muted" style="margin-top:10px;">ক্লোজ করেছেন: ${esc(r.closed_by||'')} — ${esc(r.closed_at||'')}</p>
+        <button class="btn danger sm" style="margin-top:12px;" onclick="deleteDayClosing('${r.id}')">🗑️ এই ক্লোজিং বাতিল করুন</button>
+      </div>`;
+  } else {
+    body = `
+      <div class="card">
+        <h2>🧮 দিন ক্লোজিং — ${date}</h2>
+        ${!pv.has_prev_closing ? '<p class="muted" style="margin-bottom:10px;">⚠️ এখনো কোনো আগের দিন ক্লোজ করা নেই, তাই Opening Cash হিসেবে সেটিংসের "প্রারম্ভিক নগদ" ব্যবহার হয়েছে।</p>' : ''}
+        ${dayClosingFormulaTable(pv)}
+        <div class="stat-grid" style="margin-top:14px;">
+          <div class="stat"><div class="lbl">প্রত্যাশিত নগদ (Expected Cash)</div><div class="val">৳${money(pv.expected_cash)}</div></div>
+          <div class="stat"><div class="lbl">গণনা করা প্রকৃত নগদ</div><div class="val" id="dcActualVal">৳০</div></div>
+          <div class="stat" id="dcDiffStat"><div class="lbl">গরমিল</div><div class="val" id="dcDiffVal">৳০</div></div>
+        </div>
+        <h3 style="margin:16px 0 8px; color:var(--forest); font-size:1rem;">নোট/কয়েন গুনে সংখ্যা লিখুন</h3>
+        <div class="tbl-wrap"><table><thead><tr><th>মূল্য</th><th>সংখ্যা</th><th>সমষ্টি</th></tr></thead><tbody>
+          ${DAY_CLOSING_DENOMS.map(v=>`
+            <tr>
+              <td>৳${v}</td>
+              <td><input type="number" min="0" style="width:90px; padding:6px 8px; border:1.5px solid var(--line); border-radius:8px;" id="dc_cnt_${v}" oninput="updateDayClosingTotal(${pv.expected_cash})" placeholder="0"></td>
+              <td id="dc_sub_${v}">৳০</td>
+            </tr>`).join('')}
+        </tbody></table></div>
+        <div class="field" style="margin-top:14px;"><label>নোট (ঐচ্ছিক)</label><textarea id="dc_note" rows="2" placeholder="গরমিল থাকলে কারণ বা অন্য কোনো মন্তব্য লিখতে পারেন"></textarea></div>
+        <button class="btn gold" style="margin-top:6px;" ${pv.month_locked?'disabled':''} onclick="saveDayClosing('${date}', ${pv.expected_cash})">🔒 দিন ক্লোজ করুন</button>
+      </div>`;
+  }
+
+  root.innerHTML = dateBar + body + `
+    <div class="card"><h2>📜 সাম্প্রতিক ক্লোজিং ইতিহাস</h2>
+      ${tableHTML([
+        {label:'তারিখ', key:'date'}, {label:'ওপেনিং', render:d=>'৳'+money(d.opening_cash)},
+        {label:'প্রত্যাশিত', render:d=>'৳'+money(d.expected_cash)}, {label:'প্রকৃত', render:d=>'৳'+money(d.actual_cash)},
+        {label:'গরমিল', render:d=>d.difference===0?'<span class="tag ok">মিল</span>':(d.difference>0?`<span class="tag mid">+৳${money(d.difference)}</span>`:`<span class="tag warn">−৳${money(Math.abs(d.difference))}</span>`)},
+        {label:'ক্লোজ করেছেন', key:'closed_by'}
+      ], historyRows)}
+    </div>`;
+  if(!pv.closed) updateDayClosingTotal(pv.expected_cash);
+}
+
+function dayClosingFormulaTable(x){
+  const rows = [
+    ['Opening Cash (আগের দিনের ক্যাশ)', x.opening_cash],
+    ['+ Cash Sales (নগদ বিক্রয়)', x.cash_sales],
+    ['+ Customer Collection (গ্রাহকের বাকি আদায়)', x.customer_collection],
+    ['+ Other Income (অন্যান্য আয়)', x.other_income],
+    ['− Purchase (নগদ ক্রয়)', -x.purchase_cash],
+    ['− Expense (খরচ)', -x.expense_cash],
+    ['− Supplier Payment (সরবরাহকারীকে পরিশোধ)', -x.supplier_payment_cash]
+  ];
+  if(x.adjustment) rows.push(['± সমন্বয় (অন্যান্য নগদ লেনদেন)', x.adjustment]);
+  return `<div class="tbl-wrap"><table><tbody>
+    ${rows.map(r=>`<tr><td>${r[0]}</td><td style="text-align:right; font-weight:700;">${r[1]<0?'−':''}৳${money(Math.abs(r[1]))}</td></tr>`).join('')}
+    <tr style="background:#F8F3E4;"><td><b>= Expected Cash (প্রত্যাশিত নগদ)</b></td><td style="text-align:right;"><b>৳${money(x.expected_cash)}</b></td></tr>
+  </tbody></table></div>`;
+}
+
+function changeDayClosingDate(v){ window._dcDate = v; loadTab('day-closing'); }
+
+function updateDayClosingTotal(expected){
+  let total = 0;
+  DAY_CLOSING_DENOMS.forEach(v=>{
+    const el = document.getElementById('dc_cnt_'+v);
+    const cnt = el ? (Number(el.value)||0) : 0;
+    const sub = cnt*v;
+    total += sub;
+    const subEl = document.getElementById('dc_sub_'+v);
+    if(subEl) subEl.textContent = '৳'+money(sub);
+  });
+  const av = document.getElementById('dcActualVal'); if(av) av.textContent = '৳'+money(total);
+  const diff = total - expected;
+  const dv = document.getElementById('dcDiffVal');
+  if(dv) dv.textContent = (diff===0?'৳০ (মিল আছে)':(diff>0?'+৳'+money(diff):'−৳'+money(Math.abs(diff))));
+  const ds = document.getElementById('dcDiffStat');
+  if(ds) ds.className = 'stat' + (diff!==0 ? ' warn' : '');
+}
+
+async function saveDayClosing(date, expected){
+  const denominations = DAY_CLOSING_DENOMS.map(v=>({ value:v, count: Number((document.getElementById('dc_cnt_'+v)||{}).value)||0 })).filter(d=>d.count>0);
+  const actual = denominations.reduce((s,d)=>s+d.value*d.count,0);
+  const diff = actual - expected;
+  let msg = `প্রত্যাশিত নগদ: ৳${money(expected)}\nগণনা করা নগদ: ৳${money(actual)}\n`;
+  msg += diff===0 ? 'হিসাব পুরোপুরি মিলে গেছে ✅' : (diff>0 ? `৳${money(diff)} বেশি পাওয়া গেছে` : `৳${money(Math.abs(diff))} কম পাওয়া গেছে`);
+  if(!confirm(msg + '\n\nদিন ক্লোজ করলে এটা আর পরিবর্তন করা যাবে না (শুধু সর্বশেষ ক্লোজিং বাতিল করা যায়)। এগিয়ে যেতে চান?')) return;
+  const note = document.getElementById('dc_note').value.trim();
+  const r = await api('accSaveDayClosing', {date, denominations, note});
+  if(r.ok){ toast('দিন ক্লোজ করা হয়েছে'); loadTab('day-closing'); } else toast(r.error);
+}
+
+async function deleteDayClosing(id){
+  if(!confirm('এই দিনের ক্লোজিং বাতিল করতে চান? (শুধু সবচেয়ে সাম্প্রতিক ক্লোজিংই বাতিল করা যায়)')) return;
+  const r = await api('accDeleteDayClosing', {id});
+  if(r.ok){ toast('বাতিল করা হয়েছে'); loadTab('day-closing'); } else toast(r.error);
+}
+
+/* ================= মাসিক ক্যাশ ক্লোজিং ================= */
+window._mcMonth = window._mcMonth || new Date().toISOString().slice(0,7);
+
+async function loadMonthClosing(root){
+  root.innerHTML = `<div class="empty">লোড হচ্ছে…</div>`;
+  const month = window._mcMonth;
+  const [pv, hist] = await Promise.all([
+    api('accGetMonthClosingPreview', {month}),
+    api('accGetMonthClosingList', {})
+  ]);
+  if(!pv.ok){ root.innerHTML = `<div class="card">${esc(pv.error)}</div>`; return; }
+
+  const bar = `
+    <div class="card" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <div class="field" style="margin-bottom:0;"><label>মাস</label><input type="month" id="mc_month" value="${month}" onchange="changeMonthClosingMonth(this.value)"></div>
+      ${pv.closed ? '<span class="tag ok">✅ এই মাস ক্লোজ করা হয়ে গেছে</span>' : '<span class="tag mid">⏳ এখনো ক্লোজ করা হয়নি</span>'}
+    </div>`;
+
+  const data = pv.closed ? pv.record : pv;
+  const summary = `
+    <div class="card">
+      <h2>📅 মাস ক্লোজিং সামারি — ${data.month}</h2>
+      <div class="stat-grid">
+        <div class="stat"><div class="lbl">Opening Cash (মাসের শুরুতে)</div><div class="val">৳${money(data.opening_cash)}</div></div>
+        <div class="stat"><div class="lbl">Closing Cash (মাসের শেষে)</div><div class="val">৳${money(data.closing_cash)}</div></div>
+        <div class="stat"><div class="lbl">মোট নগদ বিক্রয়</div><div class="val">৳${money(data.total_cash_sales)}</div></div>
+        <div class="stat"><div class="lbl">মোট বাকি আদায়</div><div class="val">৳${money(data.total_customer_collection)}</div></div>
+        <div class="stat"><div class="lbl">মোট অন্যান্য আয়</div><div class="val">৳${money(data.total_other_income)}</div></div>
+        <div class="stat"><div class="lbl">মোট নগদ ক্রয়</div><div class="val">৳${money(data.total_purchase)}</div></div>
+        <div class="stat"><div class="lbl">মোট খরচ</div><div class="val">৳${money(data.total_expense)}</div></div>
+        <div class="stat"><div class="lbl">মোট সরবরাহকারী পরিশোধ</div><div class="val">৳${money(data.total_supplier_payment)}</div></div>
+      </div>
+      ${pv.closed ? `
+        ${data.note ? `<p class="muted" style="margin-top:8px;">📝 ${esc(data.note)}</p>` : ''}
+        <p class="muted" style="margin-top:8px;">ক্লোজ করেছেন: ${esc(data.closed_by||'')} — ${esc(data.closed_at||'')}</p>
+        ${data.unlocked ? `
+          <p class="tag warn" style="margin-top:10px; display:inline-block;">🔓 এই মাস সাময়িকভাবে আনলক করা আছে — লেনদেন যোগ/পরিবর্তন করা যাচ্ছে (আনলক করেছেন: ${esc(data.unlocked_by||'')})</p>
+          ${isSuperAdmin() ? `<div style="margin-top:10px;"><button class="btn ghost" onclick="relockMonth('${month}')">🔒 আবার লক করুন</button></div>` : ''}
+        ` : (isSuperAdmin() ? `
+          <div style="margin-top:14px;">
+            <button class="btn ghost" onclick="unlockMonth('${month}')">🔓 এই মাস আনলক করুন (সুপার এডমিন)</button>
+            <p class="muted" style="margin-top:6px;">ভুল সংশোধনের জন্য এই মাসের বিগত তারিখে আবার লেনদেন যোগ/পরিবর্তন করতে চাইলে আনলক করুন।</p>
+          </div>
+        ` : '')}
+      ` : `
+        <p class="muted" style="margin-top:10px;">এই মাসের ${pv.days_closed}/${pv.expected_days} দিন ক্লোজ করা হয়েছে।
+        ${pv.all_days_closed ? '✅ সব দিন ক্লোজ করা — এখন মাস ক্লোজ করা যাবে।' : '⚠️ আগে বাকি দিনগুলো "দিন ক্লোজিং" থেকে ক্লোজ করুন।'}</p>
+        <div class="field" style="margin-top:10px;"><label>নোট (ঐচ্ছিক)</label><textarea id="mc_note" rows="2"></textarea></div>
+        <button class="btn gold" style="margin-top:6px;" ${pv.all_days_closed?'':'disabled'} onclick="closeMonth('${month}')">🔒 মাস ক্লোজ করুন</button>
+      `}
+    </div>`;
+
+  root.innerHTML = bar + summary + `
+    <div class="card"><h2>📜 মাস ক্লোজিং ইতিহাস</h2>
+      ${tableHTML([
+        {label:'মাস', key:'month'}, {label:'Opening', render:d=>'৳'+money(d.opening_cash)},
+        {label:'Closing', render:d=>'৳'+money(d.closing_cash)}, {label:'দিন ক্লোজ হয়েছে', key:'days_closed'},
+        {label:'ক্লোজ করেছেন', key:'closed_by'},
+        {label:'অবস্থা', render:d=>d.unlocked ? '<span class="tag warn">🔓 আনলক করা</span>' : '<span class="tag ok">🔒 লক করা</span>'}
+      ], hist.list||[])}
+    </div>`;
+}
+
+function changeMonthClosingMonth(v){ window._mcMonth = v; loadTab('month-closing'); }
+
+async function closeMonth(month){
+  const noteEl = document.getElementById('mc_note');
+  const note = noteEl ? noteEl.value.trim() : '';
+  if(!confirm(`${month} মাস ক্লোজ করতে চান? ক্লোজ করার পর এই মাসের কোনো তারিখেই আর নতুন/পুরনো লেনদেন যোগ বা পরিবর্তন করা যাবে না। এগিয়ে যেতে চান?`)) return;
+  const r = await api('accCloseMonth', {month, note});
+  if(r.ok){ toast('মাস ক্লোজ করা হয়েছে'); loadTab('month-closing'); } else toast(r.error);
+}
+
+// ================= মাস আনলক/রিলক (শুধু সুপার এডমিন) =================
+async function unlockMonth(month){
+  if(!confirm(`${month} মাস আনলক করতে চান? আনলক করলে এই মাসের বিগত যেকোনো তারিখেই আবার লেনদেন যোগ/পরিবর্তন করা যাবে। সংশোধন শেষে আবার "রিলক" করে নিতে ভুলবেন না। এগিয়ে যেতে চান?`)) return;
+  const r = await api('accUnlockMonth', {month});
+  if(r.ok){ toast('মাস আনলক করা হয়েছে'); loadTab('month-closing'); } else toast(r.error);
+}
+async function relockMonth(month){
+  if(!confirm(`${month} মাস আবার লক করতে চান? লক করার পর এই মাসের কোনো তারিখেই আর লেনদেন যোগ/পরিবর্তন করা যাবে না।`)) return;
+  const r = await api('accRelockMonth', {month});
+  if(r.ok){ toast('মাস আবার লক করা হয়েছে'); loadTab('month-closing'); } else toast(r.error);
+}
+
+/* ================= চার্ট অব অ্যাকাউন্টস ================= */
+async function loadCOA(root){
+  const r = await api('accGetChartOfAccounts', {});
+  root.innerHTML = `<div class="card"><h2>📚 চার্ট অব অ্যাকাউন্টস <button class="btn gold sm" onclick="openAccountForm()">+ নতুন অ্যাকাউন্ট</button></h2>
+    ${tableHTML([
+      {label:'কোড', key:'code'}, {label:'নাম', key:'name'}, {label:'ধরন', key:'type'},
+      {label:'প্রারম্ভিক ব্যালেন্স', render:a=>'৳'+money(a.opening_balance)},
+      {label:'', render:a=>`<button class="btn ghost sm" onclick="loadLedgerFor('${a.id}')">📖 লেজার</button> <button class="btn danger sm" onclick="deleteAccount('${a.id}')">🗑️</button>`}
+    ], r.accounts||[])}
+    </div>`;
+}
+function openAccountForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন অ্যাকাউন্ট</h2>
+    <div class="field"><label>নাম</label><input id="ac_name"></div>
+    <div class="row2">
+      <div class="field"><label>ধরন</label><select id="ac_type"><option>Asset</option><option>Liability</option><option>Equity</option><option>Revenue</option><option>Expense</option></select></div>
+      <div class="field"><label>প্রারম্ভিক ব্যালেন্স</label><input id="ac_opening" type="number" value="0"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveAccount()">সংরক্ষণ করুন</button>`);
+}
+async function saveAccount(){
+  const r=await api('accAddAccount', {name:document.getElementById('ac_name').value.trim(), type:document.getElementById('ac_type').value, opening_balance:Number(document.getElementById('ac_opening').value)||0});
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('coa'); } else toast(r.error);
+}
+async function deleteAccount(id){
+  if(!confirm('মুছে ফেলতে চান?')) return;
+  const r=await api('accDeleteAccount',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('coa'); } else toast(r.error);
+}
+function loadLedgerFor(accountId){
+  document.querySelector('[data-tab="ledger"]').click();
+  setTimeout(()=>{ const sel=document.getElementById('lg_account'); if(sel){ sel.value=accountId; showLedger(); } }, 400);
+}
+
+/* ================= জার্নাল ================= */
+let journalLines=[{account_id:'',debit:0,credit:0},{account_id:'',debit:0,credit:0}];
+async function loadJournal(root){
+  const coaRes=await api('accGetChartOfAccounts',{}); window._coa=coaRes.accounts||[];
+  journalLines=[{account_id:'',debit:0,credit:0},{account_id:'',debit:0,credit:0}];
+  const r = await api('accGetJournal', {});
+  root.innerHTML = `<div class="card"><h2>📝 নতুন জার্নাল এন্ট্রি</h2>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="jr_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>বিবরণ</label><input id="jr_desc"></div>
+    </div>
+    <div id="jrLinesWrap"></div>
+    <button class="btn ghost sm" onclick="journalLines.push({account_id:'',debit:0,credit:0}); renderJournalLines();">+ আরেকটি লাইন</button>
+    <div class="totals-box" id="jrTotalsBox"></div>
+    <button class="btn gold" style="width:100%; margin-top:8px;" onclick="submitJournal()">✅ পোস্ট করুন</button>
+    </div>
+    <div class="card"><h2>জার্নাল ইতিহাস</h2>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'ভাউচার', key:'voucher_no'}, {label:'অ্যাকাউন্ট', key:'account_name'},
+      {label:'ডেবিট', render:j=>j.debit?'৳'+money(j.debit):''}, {label:'ক্রেডিট', render:j=>j.credit?'৳'+money(j.credit):''}, {label:'বিবরণ', key:'description'}
+    ], r.entries||[])}
+    </div>`;
+  renderJournalLines();
+}
+function renderJournalLines(){
+  const wrap=document.getElementById('jrLinesWrap');
+  wrap.innerHTML = journalLines.map((l,i)=>`
+    <div class="item-row" style="grid-template-columns:2fr 1fr 1fr auto;">
+      <select onchange="journalLines[${i}].account_id=this.value;">
+        <option value="">— অ্যাকাউন্ট বাছুন —</option>
+        ${window._coa.map(a=>`<option value="${a.id}" ${l.account_id===a.id?'selected':''}>${esc(a.name)} (${a.type})</option>`).join('')}
+      </select>
+      <input type="number" placeholder="ডেবিট" value="${l.debit||''}" oninput="journalLines[${i}].debit=Number(this.value)||0; journalLines[${i}].credit=0; renderJournalTotals();">
+      <input type="number" placeholder="ক্রেডিট" value="${l.credit||''}" oninput="journalLines[${i}].credit=Number(this.value)||0; journalLines[${i}].debit=0; renderJournalTotals();">
+      <button class="btn danger sm" onclick="journalLines.splice(${i},1); renderJournalLines();">✕</button>
+    </div>`).join('');
+  renderJournalTotals();
+}
+function renderJournalTotals(){
+  const dr=journalLines.reduce((s,l)=>s+(Number(l.debit)||0),0), cr=journalLines.reduce((s,l)=>s+(Number(l.credit)||0),0);
+  const box=document.getElementById('jrTotalsBox');
+  if(box) box.innerHTML = `<div class="tr"><span>মোট ডেবিট</span><span>৳${money(dr)}</span></div><div class="tr"><span>মোট ক্রেডিট</span><span>৳${money(cr)}</span></div><div class="tr grand"><span>${dr===cr?'✅ মিলেছে':'⚠️ অমিল'}</span><span></span></div>`;
+}
+async function submitJournal(){
+  const lines=journalLines.filter(l=>l.account_id && (l.debit||l.credit));
+  const r=await api('accAddJournalEntry', {date:document.getElementById('jr_date').value, description:document.getElementById('jr_desc').value.trim(), lines});
+  if(r.ok){ toast('জার্নাল পোস্ট হয়েছে'); loadTab('journal'); } else toast(r.error);
+}
+
+/* ================= লেজার ================= */
+async function loadLedger(root){
+  const coaRes=await api('accGetChartOfAccounts',{}); window._coa=coaRes.accounts||[];
+  root.innerHTML = `<div class="card"><h2>📖 লেজার</h2>
+    <div class="field"><label>অ্যাকাউন্ট বাছুন</label><select id="lg_account" onchange="showLedger()"><option value="">— বাছুন —</option>${window._coa.map(a=>`<option value="${a.id}">${esc(a.name)} (${a.type})</option>`).join('')}</select></div>
+    <div class="row2">
+      <div class="field"><label>থেকে</label><input id="lg_from" type="date" onchange="showLedger()"></div>
+      <div class="field"><label>পর্যন্ত</label><input id="lg_to" type="date" onchange="showLedger()"></div>
+    </div>
+    <div class="field" style="align-self:end;"><button class="btn ghost" onclick="document.getElementById('lg_from').value=''; document.getElementById('lg_to').value=''; showLedger();">সব তারিখ দেখুন</button></div>
+    <div id="lgResult"></div></div>`;
+}
+async function showLedger(){
+  const id=document.getElementById('lg_account').value;
+  if(!id){ document.getElementById('lgResult').innerHTML=''; return; }
+  const from = document.getElementById('lg_from').value;
+  const to = document.getElementById('lg_to').value;
+  const r = await api('accGetLedger', {account_id:id, from, to});
+  if(!r.ok){ toast(r.error); return; }
+  const rangeTxt = (from||to) ? `(${from||'শুরু থেকে'} — ${to||'আজ পর্যন্ত'})` : '(সর্বমোট)';
+  document.getElementById('lgResult').innerHTML = `<h3 style="margin:10px 0; color:var(--forest);">${esc(r.account.name)} ${rangeTxt} — সমাপনী ব্যালেন্স: ৳${money(r.closing_balance)}</h3>
+    ${tableHTML([
+      {label:'তারিখ', key:'date'}, {label:'ভাউচার', key:'voucher_no'}, {label:'বিবরণ', key:'description'},
+      {label:'ডেবিট', render:x=>x.debit?'৳'+money(x.debit):''}, {label:'ক্রেডিট', render:x=>x.credit?'৳'+money(x.credit):''}, {label:'ব্যালেন্স', render:x=>'৳'+money(x.balance)}
+    ], r.rows)}`;
+}
+
+/* ================= ট্রায়াল ব্যালেন্স ================= */
+async function loadTrialBalance(root){
+  const r = await api('accGetTrialBalance', {});
+  root.innerHTML = `<div class="card"><h2>⚖️ ট্রায়াল ব্যালেন্স</h2>
+    ${tableHTML([
+      {label:'অ্যাকাউন্ট', key:'name'}, {label:'ধরন', key:'type'},
+      {label:'ডেবিট', render:x=>x.debit?'৳'+money(x.debit):''}, {label:'ক্রেডিট', render:x=>x.credit?'৳'+money(x.credit):''}
+    ], r.rows||[])}
+    <div class="totals-box"><div class="tr grand"><span>মোট ডেবিট</span><span>৳${money(r.total_debit)}</span></div><div class="tr grand"><span>মোট ক্রেডিট</span><span>৳${money(r.total_credit)}</span></div></div>
+    </div>`;
+}
+
+/* ================= রিপোর্ট: লাভ-ক্ষতি ================= */
+async function loadRepPL(root){
+  root.innerHTML = `<div class="card"><h2>📈 লাভ-ক্ষতি হিসাব</h2>
+    <div class="row2"><div class="field"><label>থেকে</label><input id="pl_from" type="date"></div><div class="field"><label>পর্যন্ত</label><input id="pl_to" type="date"></div></div>
+    <button class="btn ghost sm" onclick="runPL()">রিপোর্ট দেখুন</button>
+    <div id="plResult" style="margin-top:14px;"></div></div>`;
+  runPL();
+}
+async function runPL(){
+  const r = await api('accGetProfitLoss', {from:document.getElementById('pl_from').value, to:document.getElementById('pl_to').value});
+  document.getElementById('plResult').innerHTML = `
+    <h3 style="color:var(--forest);">আয় (Revenue)</h3>
+    ${tableHTML([{label:'খাত', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.revenue||[])}
+    <p style="text-align:right; font-weight:800; margin:6px 0;">মোট আয়: ৳${money(r.total_revenue)}</p>
+    <p style="text-align:right; color:var(--muted); margin:2px 0;">বিক্রিত পণ্যের ব্যয় (COGS): ৳${money(r.cogs_amount)}</p>
+    <div class="totals-box"><div class="tr grand"><span>গ্রস মুনাফা (Gross Profit)</span><span>৳${money(r.gross_profit)}</span></div></div>
+    <h3 style="color:var(--forest); margin-top:12px;">খরচ (Expense — COGS সহ)</h3>
+    ${tableHTML([{label:'খাত', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.expense||[])}
+    <p style="text-align:right; font-weight:800; margin:6px 0;">মোট খরচ: ৳${money(r.total_expense)} <span style="font-weight:400; color:var(--muted);">(পরিচালন খরচ: ৳${money(r.operating_expense)})</span></p>
+    <div class="totals-box"><div class="tr grand"><span>নিট মুনাফা</span><span>৳${money(r.net_profit)}</span></div></div>`;
+}
+
+/* ================= রিপোর্ট: ব্যালেন্স শীট ================= */
+async function loadRepBS(root){
+  root.innerHTML = `<div class="card"><h2>🏛️ ব্যালেন্স শীট</h2>
+    <div class="field" style="max-width:220px;"><label>তারিখ পর্যন্ত</label><input id="bs_asof" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    <button class="btn ghost sm" onclick="runBS()">রিপোর্ট দেখুন</button>
+    <div id="bsResult" style="margin-top:14px;"></div></div>`;
+  runBS();
+}
+async function runBS(){
+  const r = await api('accGetBalanceSheet', {as_of:document.getElementById('bs_asof').value});
+  document.getElementById('bsResult').innerHTML = `
+    <div class="row2">
+      <div>
+        <h3 style="color:var(--forest);">সম্পদ (Assets)</h3>
+        ${tableHTML([{label:'নাম', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.assets||[])}
+        <p style="text-align:right; font-weight:800; margin-top:6px;">মোট সম্পদ: ৳${money(r.total_assets)}</p>
+      </div>
+      <div>
+        <h3 style="color:var(--forest);">দায় (Liabilities)</h3>
+        ${tableHTML([{label:'নাম', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.liabilities||[])}
+        <p style="text-align:right; font-weight:800; margin-top:6px;">মোট দায়: ৳${money(r.total_liabilities)}</p>
+        <h3 style="color:var(--forest); margin-top:12px;">মালিকানা স্বত্ব (Equity)</h3>
+        ${tableHTML([{label:'নাম', key:'name'},{label:'পরিমাণ', render:x=>'৳'+money(x.amount)}], r.equity||[])}
+        <p>চলতি মুনাফা: ৳${money(r.retained_earnings)}</p>
+        <p style="text-align:right; font-weight:800;">মোট স্বত্ব: ৳${money(r.total_equity)}</p>
+      </div>
+    </div>`;
+}
+
+/* ================= রিপোর্ট: বিক্রয় / ক্রয় / স্টক ================= */
+async function loadRepSales(root){
+  root.innerHTML = `<div class="card"><h2>🧾 বিক্রয় রিপোর্ট (প্রফিট মার্জিন সহ)</h2>
+    <div class="row2"><div class="field"><label>থেকে</label><input id="rs_from" type="date"></div><div class="field"><label>পর্যন্ত</label><input id="rs_to" type="date"></div></div>
+    <button class="btn ghost sm" onclick="runRepSales()">রিপোর্ট দেখুন</button>
+    <div id="rsResult" style="margin-top:14px;"></div></div>`;
+  runRepSales();
+}
+async function runRepSales(){
+  const r = await api('accSalesReport', {from:document.getElementById('rs_from').value, to:document.getElementById('rs_to').value});
+  const byProduct = (r.by_product||[]).map(p=>Object.assign({}, p, {margin: p.amount? (p.gross_profit/p.amount*100):0})).sort((a,b)=>b.gross_profit-a.gross_profit);
+  document.getElementById('rsResult').innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">মোট বিক্রয়</div><div class="val">৳${money(r.total_amount)}</div></div>
+      <div class="stat"><div class="lbl">পরিশোধিত</div><div class="val">৳${money(r.total_paid)}</div></div>
+      <div class="stat warn"><div class="lbl">বাকি</div><div class="val">৳${money(r.total_due)}</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">পণ্যের ক্রয়মূল্য (COGS)</div><div class="val">৳${money(r.total_cogs)}</div></div>
+      <div class="stat ok"><div class="lbl">গ্রস মুনাফা (Gross Profit)</div><div class="val">৳${money(r.total_gross_profit)}</div></div>
+    </div>
+    <h3 style="color:var(--forest); margin:10px 0;">পণ্যভিত্তিক বিক্রয় ও প্রফিট মার্জিন (সবচেয়ে লাভজনক আগে)</h3>
+    <div id="repByProductWrap">
+    ${tableHTML([
+      {label:'পণ্য', key:'name'},{label:'পরিমাণ', key:'qty'},{label:'বিক্রয়', render:x=>'৳'+money(x.amount)},
+      {label:'COGS', render:x=>'৳'+money(x.cogs)},{label:'গ্রস মুনাফা', render:x=>'৳'+money(x.gross_profit)},
+      {label:'মার্জিন %', render:x=>money(x.margin)+'%'}
+    ], byProduct)}
+    </div>
+    ${exportBtns('#repByProductWrap table', 'profit_margin_report')}
+    <h3 style="color:var(--forest); margin:10px 0;">ইনভয়েসভিত্তিক তালিকা</h3>
+    <div id="repInvoiceWrap">
+    ${tableHTML([
+      {label:'ইনভয়েস', key:'invoice_no'},{label:'তারিখ', key:'date'},{label:'গ্রাহক', key:'customer_name'},
+      {label:'মোট', render:x=>'৳'+money(x.total)},{label:'COGS', render:x=>'৳'+money(x.cogs)},
+      {label:'গ্রস মুনাফা', render:x=>'৳'+money(x.gross_profit)}
+    ], r.sales||[])}
+    </div>
+    ${exportBtns('#repInvoiceWrap table', 'sales_report')}`;
+}
+async function loadRepPurchase(root){
+  root.innerHTML = `<div class="card"><h2>🛒 ক্রয় রিপোর্ট</h2>
+    <div class="row2"><div class="field"><label>থেকে</label><input id="rp_from" type="date"></div><div class="field"><label>পর্যন্ত</label><input id="rp_to" type="date"></div></div>
+    <button class="btn ghost sm" onclick="runRepPurchase()">রিপোর্ট দেখুন</button>
+    <div id="rpResult" style="margin-top:14px;"></div></div>`;
+  runRepPurchase();
+}
+async function runRepPurchase(){
+  const r = await api('accPurchaseReport', {from:document.getElementById('rp_from').value, to:document.getElementById('rp_to').value});
+  document.getElementById('rpResult').innerHTML = `<div class="stat-grid">
+    <div class="stat"><div class="lbl">মোট ক্রয়</div><div class="val">৳${money(r.total_amount)}</div></div>
+    <div class="stat"><div class="lbl">পরিশোধিত</div><div class="val">৳${money(r.total_paid)}</div></div>
+    <div class="stat warn"><div class="lbl">বাকি</div><div class="val">৳${money(r.total_due)}</div></div>
+  </div>
+  <div id="repPurchaseWrap">
+  ${tableHTML([
+    {label:'ক্রয় নং', key:'purchase_no'},{label:'তারিখ', key:'date'},{label:'সরবরাহকারী', key:'supplier_name'},
+    {label:'মোট', render:x=>'৳'+money(x.total)},{label:'পরিশোধ', render:x=>'৳'+money(x.paid)},{label:'বাকি', render:x=>'৳'+money(x.due)}
+  ], r.purchases||[])}
+  </div>
+  ${exportBtns('#repPurchaseWrap table', 'purchase_report')}`;
+}
+async function loadRepStock(root){
+  const r = await api('accStockReport', {});
+  root.innerHTML = `<div class="card"><h2>📦 স্টক রিপোর্ট</h2>
+    <p class="muted">মোট স্টক মূল্য: ৳${money(r.total_stock_value)}</p>
+    <div id="repStockWrap">
+    ${tableHTML([
+      {label:'পণ্য', key:'name'}, {label:'ক্যাটাগরি', key:'category'}, {label:'স্টক', render:p=>p.current_stock+' '+esc(p.unit)},
+      {label:'স্টক মূল্য', render:p=>'৳'+money(p.stock_value)}, {label:'অবস্থা', render:p=>p.low_stock?'<span class="tag warn">⚠ কম স্টক</span>':'<span class="tag ok">ঠিক আছে</span>'}
+    ], r.products||[])}
+    </div>
+    ${exportBtns('#repStockWrap table', 'stock_report')}
+    </div>`;
+}
+
+/* ================= বাকি/পাওনা এজিং রিপোর্ট ================= */
+async function loadDueAging(root){
+  root.innerHTML = `<div class="card"><h2>⏳ বাকি এজিং রিপোর্ট</h2>
+    <div class="row2">
+      <div class="field"><label>ধরন</label><select id="da_type" onchange="runDueAging()"><option value="sale">গ্রাহকের পাওনা (বিক্রয়)</option><option value="purchase">সরবরাহকারীর বাকি (ক্রয়)</option></select></div>
+    </div>
+    <div id="daResult" style="margin-top:10px;"></div></div>`;
+  runDueAging();
+}
+async function runDueAging(){
+  const type = document.getElementById('da_type').value;
+  const r = await api('accDueAgingReport', {type});
+  if(!r.ok){ document.getElementById('daResult').innerHTML='<div class="empty">'+esc(r.error||'ত্রুটি')+'</div>'; return; }
+  document.getElementById('daResult').innerHTML = `
+    <div class="stat-grid"><div class="stat warn"><div class="lbl">সর্বমোট বাকি</div><div class="val">৳${money(r.grand_total)}</div></div></div>
+    <div id="daTblWrap">
+    ${tableHTML([
+      {label:'নাম', key:'name'},
+      {label:'০-৩০ দিন', render:x=>'৳'+money(x['0-30'])},
+      {label:'৩১-৬০ দিন', render:x=>'৳'+money(x['31-60'])},
+      {label:'৬১-৯০ দিন', render:x=>'৳'+money(x['61-90'])},
+      {label:'৯০+ দিন', render:x=>'<b class="'+(x['90+']>0?'tag warn':'')+'">৳'+money(x['90+'])+'</b>'},
+      {label:'মোট বাকি', render:x=>'৳'+money(x.total)}
+    ], r.rows||[])}
+    </div>
+    ${exportBtns('#daTblWrap table', 'due_aging_report')}`;
+}
+
+/* ================= এক্টিভিটি লগ ================= */
+async function loadActivityLog(root){
+  const r = await api('accGetActivityLog', {});
+  root.innerHTML = `<div class="card"><h2>🕒 এক্টিভিটি লগ (সাম্প্রতিক ৩০০টা)</h2>
+    <div id="logTblWrap">
+    ${tableHTML([
+      {label:'তারিখ-সময়', key:'date'}, {label:'কাজ', key:'action'}, {label:'বিবরণ', key:'details'}
+    ], r.logs||[])}
+    </div>
+    ${exportBtns('#logTblWrap table', 'activity_log')}
+    </div>`;
+}
+
+/* ================= সেটিংস ================= */
+async function loadSettings(root){
+  const r = await api('accGetSettings', {});
+  const listsRes = await api('accGetLists', {});
+  const s = r.settings, lists = listsRes.lists;
+  root.innerHTML = `<div class="card"><h2>⚙️ দোকানের তথ্য</h2>
+    <div class="row2">
+      <div class="field"><label>দোকানের নাম (বাংলা)</label><input id="st_name_bn" value="${esc(s.shop_name_bn)}"></div>
+      <div class="field"><label>নাম (English)</label><input id="st_name_en" value="${esc(s.shop_name_en)}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ফোন</label><input id="st_phone" value="${esc(s.phone)}"></div>
+      <div class="field"><label>ইমেইল</label><input id="st_email" value="${esc(s.email)}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ফেসবুক (যেমন: facebook.com/methomart)</label><input id="st_fb" value="${esc(s.fb||'')}"></div>
+      <div class="field"><label>ওয়েবসাইট</label><input id="st_website" value="${esc(s.website||'')}"></div>
+    </div>
+    <div class="field"><label>ঠিকানা</label><input id="st_address" value="${esc(s.address)}"></div>
+    <div class="row2">
+      <div class="field"><label>ব্যাংক হিসাবের নাম</label><input id="st_bank_name" value="${esc(s.bank_name)}"></div>
+      <div class="field"><label>ব্যাংক প্রারম্ভিক ব্যালেন্স</label><input id="st_bank_opening" type="number" value="${s.bank_opening||0}"></div>
+    </div>
+    <div class="field"><label>নগদ প্রারম্ভিক ব্যালেন্স</label><input id="st_cash_opening" type="number" value="${s.cash_opening||0}"></div>
+    <label style="display:flex; align-items:center; gap:8px; font-weight:600; margin-top:6px;"><input id="st_stock_alert" type="checkbox" ${s.stock_alert_enabled!==false?'checked':''} style="width:auto;"> স্টক এলার্ট চালু রাখুন (কম স্টকের পণ্যের সতর্কতা ড্যাশবোর্ডে দেখাবে)</label>
+    <button class="btn gold" style="margin-top:10px;" onclick="saveSettingsForm()">সংরক্ষণ করুন</button>
+  </div>
+  <div class="card"><h2>🧾 ইনভয়েস কাস্টমাইজেশন</h2>
+    <div class="row2">
+      <div class="field"><label>লোগো URL (ঐচ্ছিক — খালি রাখলে মেথোমার্টের ডিফল্ট লোগো বসবে)</label><input id="st_inv_logo" placeholder="https://..." value="${esc(s.invoice_logo_url||'')}"></div>
+      <div class="field"><label>থিম কালার</label><input id="st_inv_color" type="color" value="${esc(s.invoice_color||'#1F5F3F')}" style="height:42px; padding:4px;"></div>
+    </div>
+    <div class="field"><label>ইনভয়েস টেমপ্লেট</label>
+      <select id="st_inv_template">
+        <option value="classic" ${s.invoice_template==='classic'?'selected':''}>ক্লাসিক (মেমো স্টাইল)</option>
+        <option value="modern" ${s.invoice_template==='modern'?'selected':''}>মডার্ন (রঙিন হেডার)</option>
+        <option value="minimal" ${s.invoice_template==='minimal'?'selected':''}>মিনিমাল (হালকা বর্ডার)</option>
+      </select>
+    </div>
+    <div class="field"><label>ফুটার নোট (যেমন: ধন্যবাদ বার্তা)</label><input id="st_inv_footer" value="${esc(s.invoice_footer_note||'')}"></div>
+    <div class="field"><label>শর্তাবলী / নোট (ঐচ্ছিক, একাধিক লাইন)</label><textarea id="st_inv_terms" rows="3" style="width:100%; padding:9px 11px; border:1.5px solid var(--line); border-radius:9px; font-family:inherit;">${esc(s.invoice_terms||'')}</textarea></div>
+    <div class="row2">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:600;"><input id="st_inv_signature" type="checkbox" ${s.invoice_show_signature!==false?'checked':''} style="width:auto;"> স্বাক্ষরের ঘর দেখান</label>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:600;"><input id="st_inv_words" type="checkbox" ${s.invoice_show_words!==false?'checked':''} style="width:auto;"> মোট টাকা কথায় দেখান</label>
+    </div>
+    <button class="btn gold" style="margin-top:10px;" onclick="saveSettingsForm()">সংরক্ষণ করুন</button>
+    <p class="muted" style="margin-top:8px;">পরিবর্তন সেভ করার পর যেকোনো ইনভয়েস 🖨️ করে দেখে নিতে পারেন।</p>
+  </div>
+  <div class="card"><h2>খরচের খাত তালিকা</h2>
+    <div id="expHeadList">${lists.expense_head.map(h=>`<span class="tag mid" style="margin:3px;">${esc(h)} <a href="#" onclick="delListItem('expense_head','${esc(h)}');return false;" style="color:var(--danger);">✕</a></span>`).join('')}</div>
+    <div class="row2" style="margin-top:10px;"><input id="newExpHead" placeholder="নতুন খাত"> <button class="btn ghost" onclick="addListItem('expense_head')">+ যোগ করুন</button></div>
+  </div>
+  <div class="card"><h2>পেমেন্ট মাধ্যম তালিকা</h2>
+    <div id="pmList">${lists.payment_method.map(h=>`<span class="tag mid" style="margin:3px;">${esc(h)} <a href="#" onclick="delListItem('payment_method','${esc(h)}');return false;" style="color:var(--danger);">✕</a></span>`).join('')}</div>
+    <div class="row2" style="margin-top:10px;"><input id="newPm" placeholder="নতুন মাধ্যম"> <button class="btn ghost" onclick="addListItem('payment_method')">+ যোগ করুন</button></div>
+  </div>`;
+}
+async function saveSettingsForm(){
+  const settings = {
+    shop_name_bn: document.getElementById('st_name_bn').value, shop_name_en: document.getElementById('st_name_en').value,
+    phone: document.getElementById('st_phone').value, email: document.getElementById('st_email').value,
+    fb: document.getElementById('st_fb').value.trim(), website: document.getElementById('st_website').value.trim(),
+    address: document.getElementById('st_address').value, bank_name: document.getElementById('st_bank_name').value,
+    bank_opening: Number(document.getElementById('st_bank_opening').value)||0, cash_opening: Number(document.getElementById('st_cash_opening').value)||0,
+    stock_alert_enabled: document.getElementById('st_stock_alert').checked,
+    invoice_logo_url: document.getElementById('st_inv_logo').value.trim(), invoice_color: document.getElementById('st_inv_color').value,
+    invoice_template: document.getElementById('st_inv_template').value, invoice_footer_note: document.getElementById('st_inv_footer').value.trim(),
+    invoice_terms: document.getElementById('st_inv_terms').value.trim(),
+    invoice_show_signature: document.getElementById('st_inv_signature').checked, invoice_show_words: document.getElementById('st_inv_words').checked
+  };
+  const r = await api('accSaveSettings', {settings});
+  if(r.ok) toast('সংরক্ষিত হয়েছে'); else toast(r.error);
+}
+async function addListItem(type){
+  const inputId = type==='expense_head'?'newExpHead':'newPm';
+  const value=document.getElementById(inputId).value.trim();
+  if(!value) return;
+  const r=await api('accAddListItem',{type,value});
+  if(r.ok){ toast('যোগ হয়েছে'); loadTab('settings'); } else toast(r.error);
+}
+async function delListItem(type,value){
+  const r=await api('accDeleteListItem',{type,value});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('settings'); } else toast(r.error);
+}
+
+/* ================= কর্মচারী (Employees) ================= */
+async function loadEmployees(root){
+  const r = await api('accGetEmployees', {});
+  const emps = r.employees||[];
+  root.innerHTML = `<div class="card"><h2>👤 কর্মচারী তালিকা <button class="btn gold sm" onclick="openEmployeeForm()">+ নতুন কর্মচারী</button></h2>
+    ${tableHTML([
+      {label:'নাম', key:'name'}, {label:'পদবি', key:'designation'}, {label:'ফোন', key:'phone'},
+      {label:'যোগদান', key:'join_date'},
+      {label:'বেতন কাঠামো', render:e=>e.salary_type==='daily'?'দৈনিক হাজিরাভিত্তিক':'ফিক্সড মাসিক'},
+      {label:'বেতন', render:e=>e.salary_type==='daily' ? ('৳'+money(e.daily_wage)+'/দিন') : ('৳'+money(e.monthly_salary)+'/মাস')},
+      {label:'অবস্থা', render:e=>e.status==='inactive'?'<span class="tag warn">নিষ্ক্রিয়</span>':'<span class="tag ok">সক্রিয়</span>'},
+      {label:'', render:e=>`<button class="btn ghost sm" onclick='openEmployeeForm(${JSON.stringify(e)})'>✏️</button> <button class="btn danger sm" onclick="deleteEmployee('${e.id}')">🗑️</button>`}
+    ], emps)}
+    </div>`;
+}
+function openEmployeeForm(emp){
+  emp = emp || {};
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">${emp.id?'কর্মচারী আপডেট':'নতুন কর্মচারী'}</h2>
+    <input type="hidden" id="emp_id" value="${emp.id||''}">
+    <div class="row2">
+      <div class="field"><label>নাম</label><input id="emp_name" value="${esc(emp.name||'')}"></div>
+      <div class="field"><label>পদবি</label><input id="emp_desig" value="${esc(emp.designation||'')}"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>ফোন</label><input id="emp_phone" value="${esc(emp.phone||'')}"></div>
+      <div class="field"><label>যোগদানের তারিখ</label><input id="emp_join" type="date" value="${emp.join_date||new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="field"><label>বেতন কাঠামো</label>
+      <select id="emp_stype" onchange="document.getElementById('emp_monthly_wrap').style.display=this.value==='fixed'?'block':'none'; document.getElementById('emp_daily_wrap').style.display=this.value==='daily'?'block':'none';">
+        <option value="fixed" ${emp.salary_type!=='daily'?'selected':''}>ফিক্সড মাসিক বেতন</option>
+        <option value="daily" ${emp.salary_type==='daily'?'selected':''}>দৈনিক হাজিরাভিত্তিক</option>
+      </select>
+    </div>
+    <div class="row2">
+      <div class="field" id="emp_monthly_wrap" style="display:${emp.salary_type==='daily'?'none':'block'};"><label>মাসিক বেতন (৳)</label><input id="emp_monthly" type="number" value="${emp.monthly_salary||0}"></div>
+      <div class="field" id="emp_daily_wrap" style="display:${emp.salary_type==='daily'?'block':'none'};"><label>দৈনিক মজুরি (৳)</label><input id="emp_daily" type="number" value="${emp.daily_wage||0}"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="saveEmployee()">সংরক্ষণ করুন</button>`);
+}
+async function saveEmployee(){
+  const id=document.getElementById('emp_id').value;
+  const payload={
+    name:document.getElementById('emp_name').value.trim(), designation:document.getElementById('emp_desig').value.trim(),
+    phone:document.getElementById('emp_phone').value.trim(), join_date:document.getElementById('emp_join').value,
+    salary_type:document.getElementById('emp_stype').value,
+    monthly_salary:Number(document.getElementById('emp_monthly').value)||0, daily_wage:Number(document.getElementById('emp_daily').value)||0
+  };
+  if(!payload.name){ toast('নাম আবশ্যক'); return; }
+  const r = id ? await api('accUpdateEmployee', Object.assign({id}, payload)) : await api('accAddEmployee', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('employees'); } else toast(r.error);
+}
+async function deleteEmployee(id){
+  if(!confirm('মুছে ফেলতে চান? (আগের পেরোল থাকলে শুধু নিষ্ক্রিয় করা হবে)')) return;
+  const r=await api('accDeleteEmployee',{id});
+  if(r.ok){ toast(r.deactivated?'নিষ্ক্রিয় করা হয়েছে':'মুছে ফেলা হয়েছে'); loadTab('employees'); } else toast(r.error);
+}
+
+/* ================= উপস্থিতি (Attendance) ================= */
+const ATT_STATUS_LABEL = {present:'উপস্থিত', absent:'অনুপস্থিত', leave:'ছুটি', half_day:'হাফ ডে'};
+const ATT_STATUS_SYMBOL = {present:'✓', absent:'✕', leave:'ছ', half_day:'½'};
+const ATT_STATUS_COLOR = {present:'#1F5F3F', absent:'#b91c1c', leave:'#b45309', half_day:'#6d28d9'};
+const ATT_CYCLE = ['present','absent','leave','half_day'];
+
+function currentMonthStr(){ return new Date().toISOString().slice(0,7); }
+
+async function loadAttendance(root, monthOrDate){
+  // ডিফল্টভাবে মাসিক গ্রিড ভিউ দেখাবে; window._attView === 'day' হলে পুরনো দৈনিক এডিটর
+  window._attView = window._attView || 'month';
+  if (window._attView === 'day') return loadAttendanceDay(root, monthOrDate);
+  return loadAttendanceMonthGrid(root, monthOrDate);
+}
+
+function attViewToggleHtml(){
+  return `<div style="margin-bottom:10px;">
+    <button class="btn ${window._attView==='month'?'gold':'ghost'} sm" onclick="window._attView='month'; loadTab('attendance')">🗓️ মাসিক গ্রিড</button>
+    <button class="btn ${window._attView==='day'?'gold':'ghost'} sm" onclick="window._attView='day'; loadTab('attendance')">📅 দৈনিক এন্ট্রি</button>
+  </div>`;
+}
+
+/* ---------- মাসিক গ্রিড ভিউ: কলামে ১-৩১ তারিখ, সারিতে কর্মচারী, ঘরে টিক/সাইন ---------- */
+async function loadAttendanceMonthGrid(root, month){
+  month = month || window._attMonth || currentMonthStr();
+  window._attMonth = month;
+  const [empRes, attRes] = await Promise.all([api('accGetEmployees',{status:'active'}), api('accGetAttendance',{month})]);
+  const emps = empRes.employees||[];
+  const attMap = {}; // attMap[employee_id][day] = status
+  (attRes.attendance||[]).forEach(a=>{
+    const day = Number(a.date.slice(8,10));
+    (attMap[a.employee_id] = attMap[a.employee_id] || {})[day] = a.status;
+  });
+  const [y, m] = month.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const dayNums = Array.from({length: daysInMonth}, (_, i) => i+1);
+  const weekendDay = (d) => { const wd = new Date(y, m-1, d).getDay(); return wd===5 || wd===6; }; // শুক্র/শনি
+
+  const summaryOf = (empId) => {
+    const rec = attMap[empId] || {};
+    const counts = {present:0, absent:0, leave:0, half_day:0};
+    Object.values(rec).forEach(s => { if (counts[s]!==undefined) counts[s]++; });
+    return counts;
+  };
+
+  root.innerHTML = `<div class="card">
+    <h2>🗓️ উপস্থিতি — মাসিক গ্রিড</h2>
+    ${attViewToggleHtml()}
+    <div class="field" style="max-width:220px;"><label>মাস</label><input id="att_month" type="month" value="${month}" onchange="loadAttendanceMonthGrid(document.getElementById('viewRoot'), this.value)"></div>
+    ${emps.length ? `
+    <div style="font-size:12px; color:#666; margin:6px 0;">ঘরে ক্লিক করলে ক্রমান্বয়ে বদলাবে: ফাঁকা → ✓ উপস্থিত → ✕ অনুপস্থিত → ছ ছুটি → ½ হাফ ডে → (আবার ✓)</div>
+    <div class="tbl-wrap" style="overflow-x:auto;">
+      <table style="font-size:12px;"><thead><tr>
+        <th style="position:sticky; left:0; background:#fff; min-width:120px;">কর্মচারী</th>
+        ${dayNums.map(d=>`<th style="min-width:26px; text-align:center; ${weekendDay(d)?'background:#fdf2f2;':''}">${d}</th>`).join('')}
+        <th style="min-width:75px;">সারাংশ</th>
+      </tr></thead><tbody>
+      ${emps.map(e=>{
+        return `<tr id="attRow_${e.id}">
+          <td style="position:sticky; left:0; background:#fff; font-weight:600;">${esc(e.name)}</td>
+          ${dayNums.map(d=>{
+            const st = (attMap[e.id]||{})[d];
+            const sym = st ? ATT_STATUS_SYMBOL[st] : '·';
+            const color = st ? ATT_STATUS_COLOR[st] : '#ccc';
+            return `<td style="text-align:center; cursor:pointer; ${weekendDay(d)?'background:#fdf2f2;':''}" title="${st?ATT_STATUS_LABEL[st]:'ফাঁকা — ক্লিক করুন'}" onclick="cycleAttendanceCell('${e.id}', ${d}, this)">
+              <span style="color:${color}; font-weight:700;">${sym}</span>
+            </td>`;
+          }).join('')}
+          <td id="attSummary_${e.id}" style="font-size:11px; white-space:nowrap;">${summaryText(summaryOf(e.id))}</td>
+        </tr>`;
+      }).join('')}
+      </tbody></table>
+    </div>`
+    : `<div class="empty">কোনো সক্রিয় কর্মচারী নেই — আগে "কর্মচারী" ট্যাব থেকে যোগ করুন</div>`}
+  </div>`;
+  // ক্লায়েন্ট-সাইডে ক্যাশ রাখা হচ্ছে যাতে প্রতিটা ক্লিকে আবার API কল করে
+  // বর্তমান স্ট্যাটাস জানতে না হয় — দ্রুত এন্ট্রির জন্য জরুরি
+  window._attMap = attMap;
+}
+function summaryText(s){ return `✓${s.present} ✕${s.absent} ছ${s.leave} ½${s.half_day}`; }
+
+async function cycleAttendanceCell(employeeId, day, cellEl){
+  const month = window._attMonth;
+  const dateStr = `${month}-${String(day).padStart(2,'0')}`;
+  window._attMap[employeeId] = window._attMap[employeeId] || {};
+  const curStatus = window._attMap[employeeId][day] || null;
+  const nextIdx = curStatus ? (ATT_CYCLE.indexOf(curStatus)+1) % ATT_CYCLE.length : 0;
+  const nextStatus = ATT_CYCLE[nextIdx];
+  const span = cellEl.querySelector('span');
+  const prevText = span.textContent, prevColor = span.style.color;
+  span.textContent = ATT_STATUS_SYMBOL[nextStatus];
+  span.style.color = ATT_STATUS_COLOR[nextStatus];
+  const r = await api('accMarkAttendance', {employee_id: employeeId, date: dateStr, status: nextStatus});
+  if(!r.ok){ span.textContent = prevText; span.style.color = prevColor; toast(r.error||'সংরক্ষণ ব্যর্থ হয়েছে'); return; }
+  cellEl.title = ATT_STATUS_LABEL[nextStatus];
+  window._attMap[employeeId][day] = nextStatus;
+  const counts = {present:0, absent:0, leave:0, half_day:0};
+  Object.values(window._attMap[employeeId]).forEach(s => { if (counts[s]!==undefined) counts[s]++; });
+  const summaryEl = document.getElementById('attSummary_'+employeeId);
+  if (summaryEl) summaryEl.textContent = summaryText(counts);
+}
+
+/* ---------- দৈনিক এন্ট্রি ভিউ (আগের ডিজাইন, দ্রুত একদিনের এন্ট্রির জন্য) ---------- */
+async function loadAttendanceDay(root, date){
+  date = date || window._attDate || new Date().toISOString().slice(0,10);
+  const [empRes, attRes] = await Promise.all([api('accGetEmployees',{status:'active'}), api('accGetAttendance',{date})]);
+  const emps = empRes.employees||[];
+  const attMap = {}; (attRes.attendance||[]).forEach(a=>attMap[a.employee_id]=a.status);
+  root.innerHTML = `<div class="card">
+    <h2>📅 দৈনিক উপস্থিতি</h2>
+    ${attViewToggleHtml()}
+    <div class="field" style="max-width:220px;"><label>তারিখ</label><input id="att_date" type="date" value="${date}" onchange="loadAttendanceDay(document.getElementById('viewRoot'), this.value)"></div>
+    ${emps.length ? `<div class="tbl-wrap"><table><thead><tr><th>নাম</th><th>পদবি</th><th>উপস্থিতি</th></tr></thead><tbody>
+      ${emps.map(e=>`<tr><td>${esc(e.name)}</td><td>${esc(e.designation||'')}</td><td>
+        <select id="att_${e.id}">
+          ${Object.keys(ATT_STATUS_LABEL).map(s=>`<option value="${s}" ${(attMap[e.id]||'present')===s?'selected':''}>${ATT_STATUS_LABEL[s]}</option>`).join('')}
+        </select></td></tr>`).join('')}
+      </tbody></table></div>
+      <button class="btn gold" style="margin-top:12px;" onclick="saveAttendance()">সংরক্ষণ করুন</button>`
+      : `<div class="empty">কোনো সক্রিয় কর্মচারী নেই — আগে "কর্মচারী" ট্যাব থেকে যোগ করুন</div>`}
+    </div>`;
+  window._attDate = date;
+}
+async function saveAttendance(){
+  const date = document.getElementById('att_date').value;
+  const empRes = await api('accGetEmployees', {status:'active'});
+  const records = (empRes.employees||[]).map(e=>({employee_id:e.id, status:document.getElementById('att_'+e.id).value}));
+  const r = await api('accBulkMarkAttendance', {date, records});
+  if(r.ok){ toast('উপস্থিতি সংরক্ষিত হয়েছে'); } else toast(r.error);
+}
+
+/* ================= পেরোল (Payroll) ================= */
+async function loadPayroll(root, month){
+  month = month || window._payrollMonth || currentMonthStr();
+  window._payrollMonth = month;
+  const [sumRes, listRes] = await Promise.all([api('accGetPayrollSummary',{month}), api('accGetPayrollList',{month})]);
+  const list = listRes.payroll||[];
+  root.innerHTML = `
+    <div class="card">
+      <h2>💰 পেরোল</h2>
+      <div class="row2" style="align-items:end;">
+        <div class="field"><label>মাস</label><input id="pr_month" type="month" value="${month}" onchange="loadTab('payroll')"></div>
+        <div><button class="btn gold" onclick="generatePayroll(false)">⚙️ পেরোল তৈরি করুন</button>
+          <button class="btn ghost" onclick="generatePayroll(true)">🔄 হাজিরা দিয়ে রিফ্রেশ (অপরিশোধিত)</button></div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">সক্রিয় কর্মচারী</div><div class="val">${sumRes.total_employees||0}</div></div>
+      <div class="stat"><div class="lbl">এই মাসের মোট বেতন</div><div class="val">৳${money(sumRes.total_net)}</div></div>
+      <div class="stat"><div class="lbl">পরিশোধিত</div><div class="val">৳${money(sumRes.total_paid)}</div></div>
+      <div class="stat warn"><div class="lbl">বাকি</div><div class="val">৳${money(sumRes.total_unpaid)}</div></div>
+    </div>
+    <div class="card"><h2>তালিকা — ${month}</h2>
+    ${tableHTML([
+      {label:'কর্মচারী', key:'employee_name'},
+      {label:'ধরন', render:p=>p.salary_type==='daily'?'দৈনিক':'ফিক্সড'},
+      {label:'উপস্থিত', key:'present_days'}, {label:'অনুপস্থিত', key:'absent_days'}, {label:'ছুটি', key:'leave_days'},
+      {label:'বেস', render:p=>'৳'+money(p.base_amount)},
+      {label:'বোনাস', render:p=>'৳'+money(p.bonus)}, {label:'কর্তন', render:p=>'৳'+money(p.deduction)},
+      {label:'নিট বেতন', render:p=>'৳'+money(p.net_salary)},
+      {label:'অবস্থা', render:p=>p.payment_status==='paid'?`<span class="tag ok">পরিশোধিত (${p.payment_date})</span>`:'<span class="tag warn">অপরিশোধিত</span>'},
+      {label:'', render:p=>p.payment_status==='paid'
+        ? `<button class="btn danger sm" onclick="deletePayroll('${p.id}')">🗑️</button>`
+        : `<button class="btn ghost sm" onclick='openPayrollAdjustForm(${JSON.stringify(p)})'>✏️</button> <button class="btn gold sm" onclick='openPayPayrollForm(${JSON.stringify(p)})'>💵 পরিশোধ</button> <button class="btn danger sm" onclick="deletePayroll('${p.id}')">🗑️</button>`}
+    ], list)}
+    </div>`;
+}
+async function generatePayroll(force){
+  const month = document.getElementById('pr_month').value;
+  if(!month){ toast('মাস নির্বাচন করুন'); return; }
+  const r = await api('accGeneratePayroll', {month, force});
+  if(r.ok){ toast(`তৈরি: ${r.created}, আপডেট: ${r.updated}, বাদ: ${r.skipped}`); loadTab('payroll'); } else toast(r.error);
+}
+function openPayrollAdjustForm(p){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">${esc(p.employee_name)} — বোনাস/কর্তন সমন্বয়</h2>
+    <p class="muted">বেস বেতন: ৳${money(p.base_amount)}</p>
+    <div class="row2">
+      <div class="field"><label>বোনাস (৳)</label><input id="pr_bonus" type="number" value="${p.bonus||0}"></div>
+      <div class="field"><label>কর্তন (৳)</label><input id="pr_deduction" type="number" value="${p.deduction||0}"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="savePayrollAdjust('${p.id}')">সংরক্ষণ করুন</button>`);
+}
+async function savePayrollAdjust(id){
+  const bonus=Number(document.getElementById('pr_bonus').value)||0, deduction=Number(document.getElementById('pr_deduction').value)||0;
+  const r = await api('accUpdatePayroll', {id, bonus, deduction});
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('payroll'); } else toast(r.error);
+}
+function openPayPayrollForm(p){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">${esc(p.employee_name)} — বেতন পরিশোধ</h2>
+    <p class="muted">পরিশোধযোগ্য: ৳${money(p.net_salary)}</p>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="pr_pay_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>মাধ্যম</label><select id="pr_pay_method"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="payPayroll('${p.id}')">পরিশোধ নিশ্চিত করুন</button>`);
+}
+async function payPayroll(id){
+  const payment_date=document.getElementById('pr_pay_date').value, payment_method=document.getElementById('pr_pay_method').value;
+  const r = await api('accPayPayroll', {id, payment_date, payment_method});
+  if(r.ok){ closeModal(); toast('পরিশোধ সম্পন্ন হয়েছে'); loadTab('payroll'); } else toast(r.error);
+}
+async function deletePayroll(id){
+  if(!confirm('এই পেরোল রেকর্ড মুছে ফেলতে চান? (পরিশোধিত হলে সংশ্লিষ্ট জার্নাল এন্ট্রিও বাতিল হবে)')) return;
+  const r=await api('accDeletePayroll',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('payroll'); } else toast(r.error);
+}
+
+/* ================= স্থায়ী সম্পদ (Fixed Assets) ================= */
+async function loadFixedAssets(root){
+  const r = await api('accGetFixedAssets', {});
+  const assets = (r.assets||[]).filter(a=>a.status!=='disposed');
+  const disposed = (r.assets||[]).filter(a=>a.status==='disposed');
+  root.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">মোট ক্রয়মূল্য</div><div class="val">৳${money(r.total_cost)}</div></div>
+      <div class="stat"><div class="lbl">মোট সঞ্চিত অবচয়</div><div class="val">৳${money(r.total_accumulated_depreciation)}</div></div>
+      <div class="stat"><div class="lbl">মোট বই মূল্য (Book Value)</div><div class="val">৳${money(r.total_book_value)}</div></div>
+    </div>
+    <div class="card"><h2>🏗️ স্থায়ী সম্পদ তালিকা
+      <span style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn ghost sm" onclick="document.querySelector('[data-tab=\\'depreciation\\']').click()">📉 অবচয় দেখুন</button>
+        <button class="btn gold sm" onclick="openFixedAssetForm()">+ নতুন সম্পদ</button>
+      </span></h2>
+      <p class="muted" style="margin-bottom:10px;">সম্পদ = দায় + মালিকানা স্বত্ব — প্রতিটা সম্পদ কেনার সাথে সাথে ডেবিট/ক্রেডিট দুই পাশেই স্বয়ংক্রিয়ভাবে জার্নাল পোস্ট হয়ে যায়।</p>
+      ${tableHTML([
+        {label:'নাম', key:'name'}, {label:'ক্যাটাগরি', key:'category'}, {label:'ক্রয় তারিখ', key:'purchase_date'},
+        {label:'ক্রয়মূল্য', render:a=>'৳'+money(a.cost)},
+        {label:'সঞ্চিত অবচয়', render:a=>'৳'+money(a.accumulated_depreciation)},
+        {label:'বই মূল্য', render:a=>'৳'+money(a.book_value)},
+        {label:'পদ্ধতি', render:a=>a.depreciation_method==='reducing_balance'?'হ্রাসমান জের':'সরলরৈখিক'},
+        {label:'', render:a=>`<button class="btn ghost sm" onclick='editFixedAsset(${JSON.stringify(a)})'>✏️</button> <button class="btn ghost sm" onclick='openDisposeForm(${JSON.stringify(a)})'>📤 বিক্রয়/অবলুপ্তি</button> <button class="btn danger sm" onclick="deleteFixedAsset('${a.id}')">🗑️</button>`}
+      ], assets)}
+    </div>
+    ${disposed.length? `<div class="card"><h2>📤 অবলুপ্ত/বিক্রিত সম্পদ</h2>
+      ${tableHTML([
+        {label:'নাম', key:'name'}, {label:'ক্রয়মূল্য', render:a=>'৳'+money(a.cost)}, {label:'বই মূল্য (অবলুপ্তির আগে)', render:a=>'৳'+money(a.book_value)}
+      ], disposed)}</div>` : ''}
+  `;
+}
+function openFixedAssetForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন স্থায়ী সম্পদ</h2>
+    <div class="field"><label>নাম</label><input id="fa_name" placeholder="যেমন: ফ্রিজ, দোকানের সাইনবোর্ড, ডেলিভারি ভ্যান"></div>
+    <div class="row2">
+      <div class="field"><label>ক্যাটাগরি</label><input id="fa_category" value="সাধারণ"></div>
+      <div class="field"><label>ক্রয় তারিখ</label><input id="fa_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>ক্রয়মূল্য</label><input id="fa_cost" type="number"></div>
+      <div class="field"><label>ভাঙারি/অবশিষ্ট মূল্য (Salvage)</label><input id="fa_salvage" type="number" value="0"></div>
+      <div class="field"><label>আয়ুষ্কাল (বছর)</label><input id="fa_life" type="number" value="5"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>অবচয় পদ্ধতি</label><select id="fa_method"><option value="straight_line">সরলরৈখিক (Straight Line)</option><option value="reducing_balance">হ্রাসমান জের (Reducing Balance)</option></select></div>
+      <div class="field"><label>পরিশোধ মাধ্যম (ঐচ্ছিক)</label><select id="fa_pm"><option value="">— শুধু ওপেনিং ব্যালেন্স —</option><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    </div>
+    <p class="muted" style="margin-bottom:10px;">পরিশোধ মাধ্যম বাছলে এখনই নগদ/ব্যাংক থেকে টাকা কেটে জার্নাল পোস্ট হবে। ফাঁকা রাখলে আগে থেকে থাকা সম্পদ হিসেবে শুধু ওপেনিং ব্যালেন্স বসবে।</p>
+    <button class="btn gold" style="width:100%;" onclick="saveFixedAsset()">সংরক্ষণ করুন</button>`);
+}
+async function saveFixedAsset(){
+  const payload={
+    name:document.getElementById('fa_name').value.trim(), category:document.getElementById('fa_category').value.trim(),
+    purchase_date:document.getElementById('fa_date').value, cost:Number(document.getElementById('fa_cost').value)||0,
+    salvage_value:Number(document.getElementById('fa_salvage').value)||0, useful_life_years:Number(document.getElementById('fa_life').value)||1,
+    depreciation_method:document.getElementById('fa_method').value, payment_method:document.getElementById('fa_pm').value||undefined
+  };
+  const r = await api('accAddFixedAsset', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('fixed-assets'); } else toast(r.error);
+}
+function editFixedAsset(a){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">সম্পদ এডিট — ${esc(a.name)}</h2>
+    <div class="field"><label>নাম</label><input id="fae_name" value="${esc(a.name)}"></div>
+    <div class="field"><label>ক্যাটাগরি</label><input id="fae_category" value="${esc(a.category)}"></div>
+    <div class="row2">
+      <div class="field"><label>ভাঙারি/অবশিষ্ট মূল্য (Salvage)</label><input id="fae_salvage" type="number" value="${a.salvage_value}"></div>
+      <div class="field"><label>আয়ুষ্কাল (বছর)</label><input id="fae_life" type="number" value="${a.useful_life_years}"></div>
+    </div>
+    <div class="field"><label>অবচয় পদ্ধতি</label><select id="fae_method"><option value="straight_line" ${a.depreciation_method==='straight_line'?'selected':''}>সরলরৈখিক (Straight Line)</option><option value="reducing_balance" ${a.depreciation_method==='reducing_balance'?'selected':''}>হ্রাসমান জের (Reducing Balance)</option></select></div>
+    <p class="muted">ক্রয়মূল্য/ক্রয় তারিখ পরিবর্তনযোগ্য নয় (ইতিমধ্যে জার্নালে পোস্ট হয়ে গেছে) — ভুল হলে ডিলিট করে নতুন করে যোগ করুন।</p>
+    <button class="btn gold" style="width:100%; margin-top:8px;" onclick="updateFixedAsset('${a.id}')">সংরক্ষণ করুন</button>`);
+}
+async function updateFixedAsset(id){
+  const payload={ id, name:document.getElementById('fae_name').value.trim(), category:document.getElementById('fae_category').value.trim(),
+    salvage_value:Number(document.getElementById('fae_salvage').value)||0, useful_life_years:Number(document.getElementById('fae_life').value)||1,
+    depreciation_method:document.getElementById('fae_method').value };
+  const r = await api('accUpdateFixedAsset', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('fixed-assets'); } else toast(r.error);
+}
+async function deleteFixedAsset(id){
+  if(!confirm('এই সম্পদ ও এর সব জার্নাল/অবচয় এন্ট্রি মুছে ফেলতে চান?')) return;
+  const r=await api('accDeleteFixedAsset',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('fixed-assets'); } else toast(r.error);
+}
+function openDisposeForm(a){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">সম্পদ বিক্রয়/অবলুপ্তি — ${esc(a.name)}</h2>
+    <p class="muted" style="margin-bottom:10px;">বর্তমান বই মূল্য: ৳${money(a.book_value)}</p>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="fad_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>বিক্রয়মূল্য (না পেলে ০)</label><input id="fad_sale" type="number" value="0"></div>
+    </div>
+    <div class="field"><label>পরিশোধ মাধ্যম</label><select id="fad_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    <button class="btn danger" style="width:100%;" onclick="disposeAsset('${a.id}')">নিশ্চিত করুন (এটা আর ফেরত নেওয়া যাবে না)</button>`);
+}
+async function disposeAsset(id){
+  const payload={ id, date:document.getElementById('fad_date').value, sale_value:Number(document.getElementById('fad_sale').value)||0, payment_method:document.getElementById('fad_pm').value };
+  const r = await api('accDisposeFixedAsset', payload);
+  if(r.ok){ closeModal(); toast('সম্পন্ন হয়েছে — লাভ/ক্ষতি: ৳'+money(r.gain_loss)); loadTab('fixed-assets'); } else toast(r.error);
+}
+
+/* ================= অবচয় (Depreciation) ================= */
+async function loadDepreciationLog(root){
+  const assetsRes = await api('accGetFixedAssets', {});
+  window._faAssets = (assetsRes.assets||[]).filter(a=>a.status!=='disposed');
+  root.innerHTML = `
+    <div class="card">
+      <h2>📉 অবচয় চালান</h2>
+      <p class="muted" style="margin-bottom:10px;">সব সক্রিয় সম্পদের জন্য নির্দিষ্ট তারিখ পর্যন্ত বকেয়া মাসের অবচয় হিসাব করে জার্নালে (ডেবিট: অবচয় খরচ, ক্রেডিট: সঞ্চিত অবচয়) পোস্ট করবে।</p>
+      <div class="row2">
+        <div class="field"><label>তারিখ পর্যন্ত</label><input id="dep_asof" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="field" style="display:flex; align-items:flex-end;"><button class="btn gold" style="width:100%;" onclick="runDepreciationNow()">▶️ অবচয় চালান</button></div>
+      </div>
+    </div>
+    <div class="card"><h2>📋 অবচয় লগ
+      <select id="dep_filter" onchange="showDepLog()" style="padding:7px 10px; border:1.5px solid var(--line); border-radius:9px;">
+        <option value="">— সব সম্পদ —</option>
+        ${window._faAssets.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}
+      </select></h2>
+      <div id="depLogResult"></div>
+    </div>`;
+  showDepLog();
+}
+async function runDepreciationNow(){
+  const as_of=document.getElementById('dep_asof').value;
+  const r = await api('accRunDepreciationAll', {as_of});
+  if(r.ok){ toast(`${r.processed}টি সম্পদে মোট ৳${money(r.total_depreciation)} অবচয় পোস্ট হয়েছে`); loadTab('depreciation'); } else toast(r.error);
+}
+async function showDepLog(){
+  const asset_id=document.getElementById('dep_filter').value;
+  const r = await api('accGetDepreciationLog', {asset_id});
+  document.getElementById('depLogResult').innerHTML = tableHTML([
+    {label:'তারিখ', key:'date'}, {label:'সম্পদ', key:'asset_name'}, {label:'অবচয়ের পরিমাণ', render:x=>'৳'+money(x.amount)},
+    {label:'সঞ্চিত অবচয় (এর পরে)', render:x=>'৳'+money(x.accumulated_after)}, {label:'বই মূল্য (এর পরে)', render:x=>'৳'+money(x.book_value_after)}
+  ], r.log||[]);
+}
+
+/* ================= মালিক/পার্টনার ক্যাপিটাল (Partner Capital) ================= */
+async function loadPartners(root){
+  const [pr, st] = await Promise.all([api('accGetPartners', {}), api('accGetPartnerCapitalStatement', {})]);
+  window._partners = pr.partners||[];
+  const shareWarn = Math.round(pr.total_profit_share_percent) !== 100 && window._partners.length>0;
+  root.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat"><div class="lbl">মোট মালিকানা মূলধন</div><div class="val">৳${money(pr.total_capital)}</div></div>
+      <div class="stat ${shareWarn?'warn':''}"><div class="lbl">মোট লাভ-ভাগ</div><div class="val">${(pr.total_profit_share_percent||0)}%</div></div>
+    </div>
+    ${shareWarn? `<p class="muted" style="color:var(--danger); margin-bottom:10px;">⚠️ সব পার্টনারের লাভ-ভাগের যোগফল ১০০% হওয়া উচিত</p>` : ''}
+    <div class="card"><h2>🤝 মালিক/পার্টনার তালিকা <button class="btn gold sm" onclick="openPartnerForm()">+ নতুন পার্টনার</button></h2>
+      ${tableHTML([
+        {label:'নাম', key:'name'}, {label:'ফোন', key:'phone'}, {label:'লাভ-ভাগ', render:p=>p.profit_share_percent+'%'},
+        {label:'প্রারম্ভিক মূলধন', render:p=>'৳'+money(p.opening_capital)},
+        {label:'বর্তমান মূলধন', render:p=>'৳'+money(p.current_capital)},
+        {label:'', render:p=>`<button class="btn ghost sm" onclick='openPartnerTxnForm(${JSON.stringify(p)},"contribution")'>➕ বিনিয়োগ</button> <button class="btn ghost sm" onclick='openPartnerTxnForm(${JSON.stringify(p)},"withdrawal")'>➖ উত্তোলন</button> <button class="btn ghost sm" onclick='editPartner(${JSON.stringify(p)})'>✏️</button> <button class="btn danger sm" onclick="deactivatePartner('${p.id}')">🗑️</button>`}
+      ], window._partners)}
+    </div>
+    <div class="card"><h2>📊 পার্টনার ক্যাপিটাল স্টেটমেন্ট <span class="muted" style="font-weight:400; font-size:.8rem;">(নিট মুনাফা: ৳${money(st.net_profit)})</span></h2>
+      <p class="muted" style="margin-bottom:10px;">লাভ-ভাগের অংশ তথ্যভিত্তিক হিসাব — যতক্ষণ না আসল টাকা বিনিয়োগ/উত্তোলন হয়, ততক্ষণ জার্নালে পোস্ট হয় না।</p>
+      ${tableHTML([
+        {label:'নাম', key:'name'}, {label:'লাভ-ভাগ', render:x=>x.profit_share_percent+'%'},
+        {label:'বর্তমান মূলধন', render:x=>'৳'+money(x.current_capital)},
+        {label:'মুনাফার অংশ', render:x=>'৳'+money(x.profit_share_amount)},
+        {label:'মূলধন + মুনাফার অংশ', render:x=>'৳'+money(x.capital_incl_profit_share)}
+      ], st.rows||[])}
+    </div>
+    <div class="card"><h2>📜 মূলধন লেনদেনসমূহ
+      <select id="pc_filter" onchange="showPartnerTxns()" style="padding:7px 10px; border:1.5px solid var(--line); border-radius:9px;">
+        <option value="">— সব পার্টনার —</option>
+        ${window._partners.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+      </select></h2>
+      <div id="pcTxnResult"></div>
+    </div>`;
+  showPartnerTxns();
+}
+function openPartnerForm(){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">নতুন পার্টনার/মালিক</h2>
+    <div class="field"><label>নাম</label><input id="pt_name"></div>
+    <div class="row2">
+      <div class="field"><label>ফোন</label><input id="pt_phone"></div>
+      <div class="field"><label>লাভ-ভাগ (%)</label><input id="pt_share" type="number" value="0"></div>
+    </div>
+    <div class="field"><label>প্রারম্ভিক মূলধন</label><input id="pt_opening" type="number" value="0"></div>
+    <button class="btn gold" style="width:100%;" onclick="savePartner()">সংরক্ষণ করুন</button>`);
+}
+async function savePartner(){
+  const payload={ name:document.getElementById('pt_name').value.trim(), phone:document.getElementById('pt_phone').value.trim(),
+    profit_share_percent:Number(document.getElementById('pt_share').value)||0, opening_capital:Number(document.getElementById('pt_opening').value)||0 };
+  const r = await api('accAddPartner', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('partners'); } else toast(r.error);
+}
+function editPartner(p){
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">পার্টনার এডিট — ${esc(p.name)}</h2>
+    <div class="field"><label>নাম</label><input id="pte_name" value="${esc(p.name)}"></div>
+    <div class="row2">
+      <div class="field"><label>ফোন</label><input id="pte_phone" value="${esc(p.phone||'')}"></div>
+      <div class="field"><label>লাভ-ভাগ (%)</label><input id="pte_share" type="number" value="${p.profit_share_percent}"></div>
+    </div>
+    <button class="btn gold" style="width:100%;" onclick="updatePartner('${p.id}')">সংরক্ষণ করুন</button>`);
+}
+async function updatePartner(id){
+  const payload={ id, name:document.getElementById('pte_name').value.trim(), phone:document.getElementById('pte_phone').value.trim(), profit_share_percent:Number(document.getElementById('pte_share').value)||0 };
+  const r = await api('accUpdatePartner', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('partners'); } else toast(r.error);
+}
+async function deactivatePartner(id){
+  if(!confirm('এই পার্টনারকে নিষ্ক্রিয় করতে চান? (পুরনো লেনদেন ও ইতিহাস অক্ষত থাকবে)')) return;
+  const r=await api('accDeletePartner',{id});
+  if(r.ok){ toast('নিষ্ক্রিয় করা হয়েছে'); loadTab('partners'); } else toast(r.error);
+}
+function openPartnerTxnForm(p, type){
+  const title = type==='contribution' ? 'মূলধন বিনিয়োগ' : 'মূলধন উত্তোলন';
+  openModal(`<h2 style="color:var(--forest); margin-bottom:14px;">${title} — ${esc(p.name)}</h2>
+    <p class="muted" style="margin-bottom:10px;">বর্তমান মূলধন: ৳${money(p.current_capital)}</p>
+    <div class="row2">
+      <div class="field"><label>তারিখ</label><input id="pc_date" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>পরিমাণ</label><input id="pc_amount" type="number"></div>
+    </div>
+    <div class="field"><label>মাধ্যম</label><select id="pc_pm"><option>নগদ</option><option>বিকাশ</option><option>নগদ (Nagad)</option><option>রকেট</option><option>ব্যাংক</option></select></div>
+    <div class="field"><label>বিবরণ</label><input id="pc_desc"></div>
+    <button class="btn gold" style="width:100%;" onclick="savePartnerTxn('${p.id}','${type}')">নিশ্চিত করুন</button>`);
+}
+async function savePartnerTxn(partnerId, type){
+  const payload={ partner_id:partnerId, type, date:document.getElementById('pc_date').value, amount:Number(document.getElementById('pc_amount').value)||0,
+    payment_method:document.getElementById('pc_pm').value, description:document.getElementById('pc_desc').value.trim() };
+  const r = await api('accAddPartnerCapitalTxn', payload);
+  if(r.ok){ closeModal(); toast('সংরক্ষিত হয়েছে'); loadTab('partners'); } else toast(r.error);
+}
+async function showPartnerTxns(){
+  const partner_id=document.getElementById('pc_filter').value;
+  const r = await api('accGetPartnerCapitalTxns', {partner_id});
+  document.getElementById('pcTxnResult').innerHTML = tableHTML([
+    {label:'তারিখ', key:'date'}, {label:'পার্টনার', key:'partner_name'},
+    {label:'ধরন', render:t=>t.type==='contribution'?'<span class="tag ok">বিনিয়োগ</span>':'<span class="tag warn">উত্তোলন</span>'},
+    {label:'পরিমাণ', render:t=>'৳'+money(t.amount)}, {label:'মাধ্যম', key:'payment_method'}, {label:'বিবরণ', key:'description'},
+    {label:'', render:t=>`<button class="btn danger sm" onclick="deletePartnerCapitalTxn('${t.id}')">🗑️</button>`}
+  ], r.txns||[]);
+}
+async function deletePartnerCapitalTxn(id){
+  if(!confirm('এই লেনদেন মুছে ফেলতে চান?')) return;
+  const r=await api('accDeletePartnerCapitalTxn',{id});
+  if(r.ok){ toast('মুছে ফেলা হয়েছে'); loadTab('partners'); } else toast(r.error);
+}
+
+/* ================= ট্যাব ম্যাপ ================= */
+const TAB_LOADERS = {
+  'dashboard': loadDashboard,
+  'sale-new': loadSaleNew, 'sale-list': loadSaleList, 'sale-return': loadSaleReturn,
+  'purchase-new': loadPurchaseNew, 'purchase-list': loadPurchaseList, 'purchase-return': loadPurchaseReturn,
+  'customer-collection': loadCustomerCollection, 'supplier-payment': loadSupplierPayment, 'party-ledger': loadPartyLedger,
+  'customers': loadCustomers, 'suppliers': loadSuppliers, 'products': loadProducts, 'inventory': loadInventory,
+  'expenses': loadExpenses, 'cashbank': loadCashBank,
+  'day-closing': loadDayClosing, 'month-closing': loadMonthClosing,
+  'employees': loadEmployees, 'attendance': loadAttendance, 'payroll': loadPayroll,
+  'coa': loadCOA, 'journal': loadJournal, 'ledger': loadLedger, 'trialbalance': loadTrialBalance,
+  'partners': loadPartners,
+  'fixed-assets': loadFixedAssets, 'depreciation': loadDepreciationLog,
+  'rep-pl': loadRepPL, 'rep-bs': loadRepBS, 'rep-sales': loadRepSales, 'rep-purchase': loadRepPurchase, 'rep-stock': loadRepStock,
+  'due-aging': loadDueAging, 'activity-log': loadActivityLog,
+  'settings': loadSettings
+};
+
+/* boot() ব্যবহার করে dashboard/অন্য ট্যাব লোড করে, তাই এটা অবশ্যই TAB_LOADERS
+   ডিফাইন হওয়ার পরে কল করতে হবে — আগে কল করলে প্রথমবার পেজ খোলার সময়
+   "TAB_LOADERS is not defined" এরর হয়ে ড্যাশবোর্ডের ডাটা লোড হতো না
+   (ট্যাবে ক্লিক করলে তখন কাজ করত, কারণ ততক্ষণে পুরো স্ক্রিপ্ট লোড হয়ে যেত)। */
+boot();
+</script>
+</body>
+</html>
