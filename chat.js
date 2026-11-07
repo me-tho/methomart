@@ -20,7 +20,12 @@
   #chatForm button{background:var(--forest,#1F3D2B); color:#fff; border:none; border-radius:10px; padding:0 16px; font-weight:700; cursor:pointer;}
   #chatForm button:disabled{opacity:.55;}
   #chatNavBadge{background:#c0392b; color:#fff; border-radius:999px; font-size:.7rem; font-weight:800; padding:1px 7px; margin-left:4px; display:none;}
-  @media(max-width:520px){ #chatPanel{right:0; bottom:0; width:100vw; max-width:100vw; height:100vh; max-height:100vh; border-radius:0;} }
+  @media(max-width:520px){
+    #chatPanel{top:0; right:0; bottom:0; left:0; width:auto; max-width:none; height:auto; max-height:none; border-radius:0; border:none; z-index:2147483000;}
+    #chatPanel .ch-head{padding-top:calc(12px + env(safe-area-inset-top, 0px)); position:relative; z-index:2;}
+    #chatForm{padding-bottom:calc(10px + env(safe-area-inset-bottom, 0px));}
+  }
+  @supports (height:100dvh){ @media(max-width:520px){ #chatPanel{height:100dvh; bottom:auto;} } }
   #chatPanel .ch-head{gap:8px;}
   #chatPanel .ch-title{flex:1;}
   #chatPanel .ch-back{background:rgba(255,255,255,.14); border:none; color:var(--ivory,#FBF6EC); font-size:1.15rem; width:34px; height:34px; border-radius:50%; cursor:pointer; line-height:1; flex:none;}
